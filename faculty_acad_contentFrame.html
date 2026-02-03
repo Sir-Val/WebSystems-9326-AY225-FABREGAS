@@ -1,0 +1,2326 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<!-- saved from url=(0084)https://molsa.perpetualdalta.edu.ph:8040/ADMIN_STAFF/registrar/grade/grade_sheet.jsp -->
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=windows-1252">
+<title>Untitled Document</title>
+
+<link href="./fontstyle.css" rel="stylesheet" type="text/css">
+<style>
+.nav {
+     /**color: #000000;**/
+     background-color: #FFFFFF;
+	 font-weight:normal;
+}
+.nav-highlight {
+     /**color: #0000FF;**/
+     background-color: #FAFCDD;
+	 font-weight:bold;
+}
+
+</style>
+<script language="javascript" src="./ajax.js.download"></script><script language="JavaScript" src="./date-picker.js.download"></script><script language="JavaScript" src="./common.js.download"></script><script language="JavaScript">
+function navRollOver(obj, state) {
+  document.getElementById(obj).className = (state == 'on') ? 'nav-highlight' : 'nav';
+}
+
+
+var imgWnd;
+function PrintPg(strIsFinalCopy) {
+	if(strIsFinalCopy == '1') {
+		if(!confirm("Printing Final copy locks the Grade sheet. Please click OK to print final copy."))
+			return;
+		document.gsheet.is_final_copy.value=strIsFinalCopy;
+	}
+	
+	document.gsheet.print_page.value = "1";
+	this.SubmitOnce('gsheet');
+}
+function CopyAll()
+{
+	document.gsheet.print_page.value = "";
+	var strDate = document.gsheet.date0.value;
+	var strTime = document.gsheet.time0.value;
+	var maxDisp = document.gsheet.disp_count_gs_pending.value;
+
+	if(document.gsheet.copy_all.checked) {
+		if(strDate.length == 0 || strTime.length ==0) {
+			alert("Please enter first Date and time field input.");
+			document.gsheet.copy_all.checked = false;
+			return;
+		}
+		//run a loop to copy information.	
+		for(var i =1; i< maxDisp; ++i) {
+			eval('document.gsheet.date'+i+'.value="'+strDate+'"');
+			eval('document.gsheet.time'+i+'.value="'+strTime+'"');			
+		}
+	}
+}
+function delOneGrade(objChkBox, gsRef) {
+	if(!confirm("Are you sure you want to Modify this record."))
+		return;
+	if(objChkBox) {
+		document.gsheet.del_one.value=gsRef;
+		objChkBox.checked = true;
+		PageAction(0);
+	}
+}
+function PageAction(strAction)
+{
+	document.gsheet.print_page.value = "";
+	document.gsheet.page_action.value=strAction;
+
+	//I have to check here, if cgh, faculty must click convert percentage to QP..
+	if(strAction == 1) {
+		
+		//I need to check if there is atleast one check box is selected.
+		var iMaxDisp = document.gsheet.disp_count_gs_pending.value;
+		var objChkBox; var bolReturn = true;
+		for( i = 0; i < iMaxDisp; ++i) {
+			eval('objChkBox=document.gsheet.save_'+i);
+			if(!objChkBox)
+				continue;
+			if(objChkBox.checked) {
+				bolReturn = false;
+				break;
+			}				
+		}
+		if(bolReturn) {
+			alert("Please select atleast one checkbox for saving grade.");
+			return;
+		}
+		
+	}
+	if(document.gsheet.show_save.value == "1") {
+		document.gsheet.hide_save.src = "../../../images/blank.gif";
+		
+		//there may be 2 save buttons.
+		if(document.gsheet.save_text2) {
+			document.gsheet.hide_save2.src = "../../../images/blank.gif";
+			if(strAction ==1)
+				document.gsheet.save_text2.value = "Saving in progress....";
+		}
+	}
+	if(document.gsheet.show_delete.value == "1")
+		document.gsheet.hide_delete.src = "../../../images/blank.gif";
+	if(strAction ==0 && document.gsheet.delete_text)
+		document.gsheet.delete_text.value = "deleting in progress....";
+	if(strAction ==1)
+		document.gsheet.save_text.value = "Saving in progress....";
+
+
+	this.ShowProcessing();
+}
+function ReloadPage()
+{
+	document.gsheet.print_page.value = "";
+	document.gsheet.page_action.value="";
+	if(document.gsheet.show_save.value == "1")
+		document.gsheet.hide_save.src = "../../../images/blank.gif";
+	if(document.gsheet.show_delete.value == "1")
+		document.gsheet.hide_delete.src = "../../../images/blank.gif";
+	this.ShowProcessing();
+}
+function EncodeInPercentGrade() {
+	if(!confirm('System now will switch to selected grade encoding mode. If you have encoded any grade and not yet saved, entries will be removed. Click OK to reload page, Cancel to continue encoding')) {
+		document.gsheet.encode_percent_grade.checked = !document.gsheet.encode_percent_grade.checked;
+		return;
+	}
+	ReloadPage();	
+}
+
+
+function ResetPage()
+{
+	document.gsheet.print_page.value = "";
+	document.gsheet.page_action.value="";
+	document.gsheet.subject.selectedIndex = 0;
+	this.ShowProcessing();
+}
+
+
+function ShowProcessing() {
+
+	if(document.gsheet.grade_for) {
+		if(document.gsheet.grade_for.selectedIndex)
+			document.gsheet.grade_name_.value = document.gsheet.grade_for[document.gsheet.grade_for.selectedIndex].text;
+		else	
+			document.gsheet.grade_name_.value = document.gsheet.grade_for.value;//if read only is applied.
+	}
+
+	imgWnd=
+	window.open("../../../commfile/processing.htm","PrintWindow",'width=600,height=300,top=220,left=200,toolbar=no,location=no,directories=no,status=no,menubar=no');
+	this.SubmitOnce('gsheet');
+	imgWnd.focus();
+}
+function CloseProcessing()
+{
+	if (imgWnd && imgWnd.open && !imgWnd.closed) imgWnd.close();
+}
+function checkAll()
+{
+	var maxDisp = document.gsheet.disp_count_gs_encoded.value;
+	//unselect if it is unchecked.
+	var bolCheck = document.gsheet.selAll.checked;
+	
+	var objChk;
+	for(var i =0; i< maxDisp; ++i) {
+		eval('objChk=document.gsheet.del_'+i);
+		if(!objChk)
+			continue;
+		objChk.checked=bolCheck;
+	}
+/**
+	if(!document.gsheet.selAll.checked) {
+		for(var i =0; i< maxDisp; ++i)
+			eval('document.gsheet.del_'+i+'.checked=false');
+	}
+	else {
+		for(var i =0; i< maxDisp; ++i)
+			eval('document.gsheet.del_'+i+'.checked=true');
+	}
+**/
+}
+function checkAllSave() {
+	var maxDisp = document.gsheet.disp_count_gs_pending.value;
+	//unselect if it is unchecked.
+	if(!document.gsheet.selAllSave.checked) {
+		for(var i =0; i< maxDisp; ++i)
+			eval('document.gsheet.save_'+i+'.checked=false');
+	}
+	else {
+		for(var i =0; i< maxDisp; ++i)
+			eval('document.gsheet.save_'+i+'.checked=true');
+	}
+}
+
+
+// for AUF / CGH ONLY!!!
+
+var iFailedSelectedIndex = -1;
+var iPassedSelectedIndex = -1;
+var iConditioanlSelectedIndex = -1;//for PIT.
+function GetFailedSelectedIndex(strRemark){
+
+
+
+	for (v=eval("document.gsheet."+strRemark+".length")-1 ; v >= 0; --v){
+		if (eval("document.gsheet."+strRemark+
+					"[" + v + "].text").toLowerCase().indexOf('fail') == 0)
+			return v;
+	}
+
+}
+
+function GetPassedSelectedIndex(strRemark){
+	for (v=eval("document.gsheet."+strRemark+".length")-1 ; v >= 0; --v){
+		if (eval("document.gsheet."+strRemark+
+					"[" + v + "].text").toLowerCase().indexOf('pass') == 0 &&
+			eval("document.gsheet."+strRemark+"[" + v + "].text").toLowerCase().indexOf('pass/') == -1)
+			return v;
+	}
+
+}
+function GetConditionalSelectedIndex(strRemark){
+	for (v=eval("document.gsheet."+strRemark+".length")-1 ; v >= 0; --v){
+		if (eval("document.gsheet."+strRemark+"[" + v + "].text").toLowerCase().indexOf('cond') == 0)
+			return v;
+	}
+
+}
+
+function UpdateRemarks(strGrade,strRemark, objChkBox){
+	var vGrade = "";
+	eval("vGrade = document.gsheet."+strGrade+".value");
+
+	if(vGrade.length == 0)
+	return;
+	
+	//1 = 3 to 5 fail, else pass., 
+	var iGradeSystem = 0;// 0 meaning 0 to 100
+	
+	//if fatima grade system is 1, but if encode in %ge grade, then it is in %ge.
+	var bolInvalidGrade = false;
+		
+	
+	
+
+	
+	if(iGradeSystem == 0) {
+		if ( eval(vGrade) < 75){
+			if (iFailedSelectedIndex == -1)
+				iFailedSelectedIndex = GetFailedSelectedIndex(strRemark);
+			eval("document.gsheet."+strRemark+".selectedIndex=" + iFailedSelectedIndex);
+		}
+		else if ( eval(vGrade) >= 75){
+			if (iPassedSelectedIndex == -1)
+				iPassedSelectedIndex = GetPassedSelectedIndex(strRemark);
+			eval("document.gsheet."+strRemark+".selectedIndex=" + iPassedSelectedIndex);
+		}
+	}
+	else if(iGradeSystem == 1) {//for DBTC.. 
+		if ( eval(vGrade) > 3){//failed..
+			if (iFailedSelectedIndex == -1)
+				iFailedSelectedIndex = GetFailedSelectedIndex(strRemark);
+			eval("document.gsheet."+strRemark+".selectedIndex=" + iFailedSelectedIndex);
+		}
+		else {
+			if (iPassedSelectedIndex == -1)
+				iPassedSelectedIndex = GetPassedSelectedIndex(strRemark);
+			eval("document.gsheet."+strRemark+".selectedIndex=" + iPassedSelectedIndex);
+		}
+	}
+	else if(iGradeSystem == 2) {//for PIT.. 
+		if ( eval(vGrade) > 4.49){//failed..
+			if (iFailedSelectedIndex == -1)
+				iFailedSelectedIndex = GetFailedSelectedIndex(strRemark);
+			eval("document.gsheet."+strRemark+".selectedIndex=" + iFailedSelectedIndex);
+		}
+		else if ( eval(vGrade) > 3.49){//failed..
+			if (iConditioanlSelectedIndex == -1)
+				iConditioanlSelectedIndex = GetConditionalSelectedIndex(strRemark);
+			eval("document.gsheet."+strRemark+".selectedIndex=" + iConditioanlSelectedIndex);
+		}
+		else {
+			if (iPassedSelectedIndex == -1)
+				iPassedSelectedIndex = GetPassedSelectedIndex(strRemark);
+			eval("document.gsheet."+strRemark+".selectedIndex=" + iPassedSelectedIndex);
+		}
+	}
+	else if(iGradeSystem == 3 || iGradeSystem == 4) {//for CIT.. 
+		//for 4, only 1, and 3 to 5 allowed.
+		if(iGradeSystem == 4) {
+			if(eval(vGrade) > 1 && eval(vGrade) <3) {
+				alert("Invalid Grade. Please enter grade 1 or 3-5");
+				eval("document.gsheet."+strGrade+".value=''");
+				eval("document.gsheet."+strGrade+".focus()");
+				//alert("Invalid Grade. - focused...");
+				objChkBox.checked = false;
+				//document.gsheet.grade0.focus();
+				return;
+			}
+		}
+		if(vGrade.length > 3 || eval(vGrade) < 1 || eval(vGrade) > 5) {
+			alert("Invalid Grade.");
+			eval("document.gsheet."+strGrade+".value=''");
+			eval("document.gsheet."+strGrade+".focus()");
+			//alert("Invalid Grade. - focused...");
+			objChkBox.checked = false;
+			//document.gsheet.grade0.focus();
+			return;
+		}
+		if ( eval(vGrade) < 3){//failed..
+			if (iFailedSelectedIndex == -1)
+				iFailedSelectedIndex = GetFailedSelectedIndex(strRemark);
+			eval("document.gsheet."+strRemark+".selectedIndex=" + iFailedSelectedIndex);
+		}		
+		else {
+			if (iPassedSelectedIndex == -1)
+				iPassedSelectedIndex = GetPassedSelectedIndex(strRemark);
+			eval("document.gsheet."+strRemark+".selectedIndex=" + iPassedSelectedIndex);
+		}
+	}
+	else if(iGradeSystem == 5) {
+		if ( eval(vGrade) < 85){
+			if (iFailedSelectedIndex == -1)
+				iFailedSelectedIndex = GetFailedSelectedIndex(strRemark);
+			eval("document.gsheet."+strRemark+".selectedIndex=" + iFailedSelectedIndex);
+		}
+		else if ( eval(vGrade) >= 85){
+			if (iPassedSelectedIndex == -1)
+				iPassedSelectedIndex = GetPassedSelectedIndex(strRemark);
+			eval("document.gsheet."+strRemark+".selectedIndex=" + iPassedSelectedIndex);
+		}
+	}
+	else if(iGradeSystem == 6) {
+		if(eval(vGrade) < 1 || eval(vGrade) > 5) {
+			alert("Invalid Grade.");
+			eval("document.gsheet."+strGrade+".value=''");
+			eval("document.gsheet."+strGrade+".focus()");
+			//alert("Invalid Grade. - focused...");
+			objChkBox.checked = false;
+			//document.gsheet.grade0.focus();
+			return;
+		}
+	
+	
+		if ( eval(vGrade) >3){
+			if (iFailedSelectedIndex == -1)
+				iFailedSelectedIndex = GetFailedSelectedIndex(strRemark);
+			eval("document.gsheet."+strRemark+".selectedIndex=" + iFailedSelectedIndex);
+		}
+		else{
+			if (iPassedSelectedIndex == -1)
+				iPassedSelectedIndex = GetPassedSelectedIndex(strRemark);
+			eval("document.gsheet."+strRemark+".selectedIndex=" + iPassedSelectedIndex);
+		}
+	}
+	else if(iGradeSystem == 7) {
+		if ( eval(vGrade) >4){
+			if (iFailedSelectedIndex == -1)
+				iFailedSelectedIndex = GetFailedSelectedIndex(strRemark);
+			eval("document.gsheet."+strRemark+".selectedIndex=" + iFailedSelectedIndex);
+		}
+		else{
+			if (iPassedSelectedIndex == -1)
+				iPassedSelectedIndex = GetPassedSelectedIndex(strRemark);
+			eval("document.gsheet."+strRemark+".selectedIndex=" + iPassedSelectedIndex);
+		}
+	}
+	else if(iGradeSystem == 8) {
+		if ( eval(vGrade) < 74){
+			if (iFailedSelectedIndex == -1)
+				iFailedSelectedIndex = GetFailedSelectedIndex(strRemark);
+			eval("document.gsheet."+strRemark+".selectedIndex=" + iFailedSelectedIndex);
+		}
+		else if ( eval(vGrade) >= 74){
+			if (iPassedSelectedIndex == -1)
+				iPassedSelectedIndex = GetPassedSelectedIndex(strRemark);
+			eval("document.gsheet."+strRemark+".selectedIndex=" + iPassedSelectedIndex);
+		}
+	}
+
+}
+function updateCheckBox(objGSInput, objChkBox) {
+
+	if(objGSInput.value.length == 0) {
+		if(objChkBox)
+			objChkBox.checked = false;
+	}
+	else {
+		if(objChkBox)
+			objChkBox.checked = true;
+	}
+	
+	//I have to implement the auto updating the grades.
+	if(document.gsheet.convert_grade && document.gsheet.convert_grade.checked)
+		ConvertGrade();
+}
+
+
+//call this to trigger TAB.
+//some cases, i have more options.
+function MoveNext(e, objNext1, objNext2, objNext3, objNext4) {//alert("I am here.");
+	if(e.keyCode == 13) {
+		if(objNext1)
+			objNext1.focus();
+		else if(objNext2)
+			objNext2.focus();
+		else if(objNext3)
+			objNext3.focus();
+		else if(objNext4)
+			objNext4.focus();
+	}
+}
+
+
+//implement Ajax to submit advanced Grade.. 
+function SubmitAdanceGrade() {
+	var objCOAInput = document.getElementById("submit_adv_grade");
+		
+	this.InitXmlHttpObject2(objCOAInput, 2,"<img src='../../../Ajax/ajax-loader_small_black.gif'>");//I want to get innerHTML in this.retObj
+	if(this.xmlHttp == null) {
+		alert("Failed to init xmlHttp.");
+		return;
+	}
+	var strURL = "../../../Ajax/AjaxInterface.jsp?methodRef=216&section=73773";
+
+	this.processRequest(strURL);
+}
+
+//for CIT, they can give NG only if mterm grade is >= 2.9
+function checkNGRemark() {
+
+}
+
+
+function validateGrade(objPercent, objGrade, objChkBox, objRemark) {
+	
+	var strPercent = "";
+	var strGrade   = "";
+	var strRemark  = "";
+	
+	if(objPercent) 
+		strPercent = objPercent.value;
+	if(objGrade) 
+		strGrade = objGrade.value;
+	if(objRemark) 
+		strRemark = objRemark[objRemark.selectedIndex].text;
+	//alert(strPercent)
+	//alert(strRemark);
+	//alert(strGrade)	
+	
+	strRemark = strRemark.toLowerCase();
+	if(strRemark.indexOf("pass") == 0 || (strRemark.indexOf("fail") == 0 && strRemark.indexOf("failu") == 1) ) {
+		if(strGrade == '') 
+			objChkBox.checked = false;
+		return;
+	}
+	objChkBox.checked = true;
+	
+	objPercent.value='';
+	objGrade.value = '';
+}
+</script></head>
+
+
+
+
+
+
+<body bgcolor="#D2AE72" onunload="CloseProcessing();">
+<form name="gsheet" action="https://molsa.perpetualdalta.edu.ph:8040/ADMIN_STAFF/registrar/grade/grade_sheet.jsp" method="post">
+  <table width="100%" border="0" cellspacing="0" cellpadding="0" bgcolor="#FFFFFF">
+
+<input type="hidden" name="section" value="73773">
+<input type="hidden" name="prevent_fwd" value="">
+<input type="hidden" name="show_delete">
+<input type="hidden" name="show_save">
+
+
+
+
+
+
+    <tbody><tr bgcolor="#A49A6A">
+      <td height="25" colspan="7"><div align="center"><font color="#FFFFFF"><strong>::::
+          GRADE SHEETS PAGE ::::</strong></font></div></td>
+    </tr>
+    <tr>
+      <td height="25" colspan="7">&nbsp;&nbsp;&nbsp;<strong><font size="3" color="#FF0000">
+	  </font></strong></td>
+    </tr>
+
+    <tr>
+      <td height="25" colspan="7">&nbsp;&nbsp;&nbsp; 
+
+	  <strong><font color="blue">NOTE: Subject/Sections appear are the sections handled by the logged in faculty Employee ID: 15006-00124</font></strong>
+	  
+	  </td>
+    </tr>
+    <tr>
+      <td width="1%" height="25" rowspan="4">&nbsp;</td>
+      <td width="25%" height="25" valign="bottom">Grades for</td>
+      <td width="22%" valign="bottom">Term</td>
+      <td width="27%" valign="bottom">School Year</td>
+      <td colspan="2">&nbsp; </td>
+      <td width="8%">&nbsp;</td>
+    </tr>
+    <tr>
+      <td height="25" valign="bottom">
+
+       <select name="grade_for">
+          
+<option selected="" value="1">Prelim</option>
+<option value="2">Midterm</option>
+<option value="3">Finals</option>
+        </select></td>
+      <td valign="bottom">
+	  <select name="offering_sem" onchange="ReloadPage();">
+          <option value="1">1st Sem</option>
+          
+          <option value="2" selected="">2nd Sem</option>
+
+          <option value="3">3rd Sem</option>
+
+          <option value="0">Summer</option>
+
+        </select></td>
+      <td valign="bottom">
+        
+        <input name="sy_from" type="text" size="4" maxlength="4" value="2025" class="textbox" onfocus="style.backgroundColor=&#39;#D3EBFF&#39;" onblur="style.backgroundColor=&#39;white&#39;" onkeypress=" if(event.keyCode&lt;48 || event.keyCode &gt; 57) event.returnValue=false;" onkeyup="DisplaySYTo(&quot;gsheet&quot;,&quot;sy_from&quot;,&quot;sy_to&quot;)">
+        -
+        
+        <input name="sy_to" type="text" size="4" maxlength="4" value="2026" class="textbox" onfocus="style.backgroundColor=&#39;#D3EBFF&#39;" onblur="style.backgroundColor=&#39;white&#39;" onkeypress=" if(event.keyCode&lt;48 || event.keyCode &gt; 57) event.returnValue=false;" readonly="yes">      </td>
+      <td colspan="2">
+	  	<a href="javascript:ReloadPage();"><img src="./form_proceed.gif" border="0"></a>
+	  </td>
+      <td width="8%">&nbsp;</td>
+    </tr>
+</tbody></table>
+
+  <table width="100%" border="0" cellspacing="0" cellpadding="0" bgcolor="#FFFFFF">
+    <tbody><tr>
+      <td width="1%"></td>
+      <td width="39%" height="25" valign="bottom">Section Handled</td>
+      <td valign="bottom">Instructor (Name of logged in user)</td>
+    </tr>
+    <tr>
+      <td></td>
+      <td height="25">
+        
+        <select name="section_name" onchange="ResetPage();">
+          <option value="">Select a section</option>
+          
+<option selected="" value="0401-AY225">0401-AY225</option>
+<option value="9301-AY225">9301-AY225</option>
+<option value="9302-AY225">9302-AY225</option>
+<option value="9306-AY225">9306-AY225</option>
+<option value="9307-AY225">9307-AY225</option>
+<option value="9317-AY225">9317-AY225</option>
+<option value="9318-AY225">9318-AY225</option>
+<option value="9325-AY225">9325-AY225</option>
+<option value="9326-AY225">9326-AY225</option>
+<option value="9329-AY225">9329-AY225</option>
+<option value="9330-AY225">9330-AY225</option>
+<option value="9338-AY225">9338-AY225</option>
+<option value="9339-AY225">9339-AY225</option>
+<option value="9402-AY225">9402-AY225</option>
+<option value="9406-AY225">9406-AY225</option>
+<option value="9407-AY225">9407-AY225</option>
+        </select> </td>
+      <td height="25"> <strong>
+        
+        VAL PATRICK FADEROGAO FABREGAS
+        
+        </strong> </td>
+    </tr>
+    <tr>
+      <td width="1%"></td>
+      <td height="25">Subject Handled</td>
+      <td>Subject Title </td>
+    </tr>
+    <tr>
+      <td width="1%"></td>
+      <td height="25">
+        
+        <select name="subject" onchange="ReloadPage();">
+          <option value="">Select a subject</option>
+          
+<option selected="" value="13605">MATH 1100</option>
+        </select></td>
+      <td> <strong>
+        
+        Linear Algebra</strong></td>
+      
+    </tr>
+  </tbody></table>
+
+  <table width="100%" border="0" cellspacing="1" cellpadding="1" bgcolor="#FFFFFF">
+    <tbody><tr>
+      <td width="15%">&nbsp;</td>
+      <td width="24%" bgcolor="#99CCFF"><div align="center"><font color="#000099" size="1"><strong>ROOM
+          NUMBER</strong></font></div></td>
+      <td width="20%" bgcolor="#99CCFF"><div align="center"><font color="#000099" size="1"><strong>LOCATION</strong></font></div></td>
+      <td width="26%" bgcolor="#99CCFF"><div align="center"><font color="#000099" size="1"><strong>SCHEDULE</strong></font></div></td>
+      <td width="15%">&nbsp;</td>
+    </tr>
+    
+    <tr>
+      <td>&nbsp;</td>
+      <td align="center">M-203</td>
+      <td align="center">Main Building</td>
+      <td align="center">TH 11:00AM-2:00PM</td>
+      <td>&nbsp;</td>
+    </tr>
+    
+    <tr>
+      <td>&nbsp;</td>
+      <td align="center">&nbsp;</td>
+      <td align="center">&nbsp;</td>
+      <td align="center">&nbsp;</td>
+      <td>&nbsp;</td>
+    </tr>
+
+    <tr>
+      <td>&nbsp;</td>
+      <td colspan="3"><div align="center">&nbsp;&nbsp;&nbsp;&nbsp;Date:
+          <input name="date_exam" type="text" class="textbox" onfocus="style.backgroundColor=&#39;#D3EBFF&#39;" onblur="style.backgroundColor=&#39;white&#39;" value="" size="10">
+          &nbsp;&nbsp;&nbsp;&nbsp;Time :
+          <input name="time_exam" type="text" size="8" class="textbox" onfocus="style.backgroundColor=&#39;#D3EBFF&#39;" onblur="style.backgroundColor=&#39;white&#39;" value="">
+          &nbsp;&nbsp;</div></td>
+      <td>&nbsp;</td>
+    </tr>
+    <tr>
+      <td>&nbsp;</td>
+      <td align="center">&nbsp;</td>
+      <td align="center">&nbsp;</td>
+      <td align="center">&nbsp;</td>
+      <td>&nbsp;</td>
+    </tr>
+
+  </tbody></table>
+
+  <table width="100%" border="0" cellspacing="0" cellpadding="0" bgcolor="#FFFFFF">
+    <tbody><tr bgcolor="#B9B292">
+      <td height="25" colspan="2"><div align="center">LIST OF STUDENTS ENROLLED
+          IN THIS SUBJECT</div></td>
+    </tr>
+    <tr>
+      <td width="2%" height="25"><div align="center"></div></td>
+      <td height="25">
+	  
+	  NOTE: Students in <font color="#FF0000">Red</font> color
+        are students did not have permit for exam.
+		&nbsp;&nbsp;&nbsp;&nbsp;
+		
+		
+		&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+		<div align="right">	  
+			  
+		</div>
+		
+	  </td>
+    </tr>
+	
+  </tbody></table>
+  <table width="100%" border="1" cellspacing="0" cellpadding="0" bgcolor="#FFFFFF">
+    <tbody><tr>
+      <td width="2%" height="25">&nbsp;</td>
+      <td width="8%" height="25"><div align="center"><font size="1"><strong>STUDENT ID </strong></font></div></td>
+      <td width="26%"><div align="center"><font size="1"><strong>STUDENT NAME</strong></font></div></td>
+      <td width="15%"><div align="center"><font size="1"><strong>COURSE</strong></font></div></td>
+
+
+      <td width="4%"><font size="1"><strong>YEAR</strong></font></td>
+      
+      <td width="3%"><div align="center"><font size="1"><strong>GRADE</strong></font></div></td>
+ 
+      <td width="6%"><div align="center"><font size="1"><strong>REMARKS</strong></font></div></td>
+      <td width="6%"><div align="center"><font size="1"><strong> <font size="1">SELECT  ALL</font></strong> <br>
+          <input type="checkbox" name="selAllSave" value="0" onclick="checkAllSave();">
+          </font></div></td>
+    </tr>
+    
+    <tr class="nav" id="msg0" onmouseover="navRollOver(&#39;msg0&#39;, &#39;on&#39;)" onmouseout="navRollOver(&#39;msg0&#39;, &#39;off&#39;)">
+      <td><font size="1">1</font>
+      </td><td height="25"><font size="1">23-0787-924</font>
+	  <input type="hidden" name="cur_hist0" value="171975">
+      <input type="hidden" name="cur_index0" value="24873">
+      <input type="hidden" name="credit_earned0" value="3.0">      </td>
+      <td><font size="1">ALANSALON, NATHANIEL T. </font></td>
+      <td><font size="1">BSCS-DS
+        
+		
+        </font></td>
+
+
+      <td align="center"><font size="1">1</font></td>
+      
+      <td align="center">
+	  	
+        <input name="grade0" type="text" size="3" class="textbox" onfocus="navRollOver(&#39;msg0&#39;, &#39;on&#39;);style.backgroundColor=&#39;#D3EBFF&#39;" onblur="navRollOver(&#39;msg0&#39;, &#39;off&#39;);style.backgroundColor=&#39;white&#39;;updateCheckBox(document.gsheet.grade0, document.gsheet.save_0); UpdateRemarks(&#39;grade0&#39;,&#39;remark0&#39;,document.gsheet.save_0)" onkeyup="AllowOnlyFloat(&#39;gsheet&#39;,&#39;grade0&#39;); MoveNext(event, document.gsheet.attendance1,document.gsheet.grade1);">
+	  <!--onKeyPress=" if(event.keyCode<46 || event.keyCode== 47 || event.keyCode > 57) event.returnValue=false;"-->
+         </td>
+ 
+      <td>  <select name="remark0" style="font-size:10px" tabindex="-1" onchange="validateGrade(document.gsheet.grade_percent0,document.gsheet.grade0,document.gsheet.save_0,document.gsheet.remark0)">
+          
+          		
+<option value="1">Passed</option>
+<option value="2">Failed</option>
+<option value="5">Incomplete</option>
+<option value="11">UD</option>
+<option value="12">OD</option>
+<option value="13">W</option>
+<option value="14">NC</option>
+<option value="15">FA</option>
+          
+        </select> </td>
+      <td width="6%" align="center"> <input type="checkbox" name="save_0" value="1" tabindex="-1" onclick="validateGrade(document.gsheet.grade_percent0,document.gsheet.grade0,document.gsheet.save_0,document.gsheet.remark0)"></td>
+    </tr>
+    
+    <tr class="nav" id="msg1" onmouseover="navRollOver(&#39;msg1&#39;, &#39;on&#39;)" onmouseout="navRollOver(&#39;msg1&#39;, &#39;off&#39;)">
+      <td><font size="1">2</font>
+      </td><td height="25"><font size="1">25-1984-196</font>
+	  <input type="hidden" name="cur_hist1" value="171890">
+      <input type="hidden" name="cur_index1" value="24873">
+      <input type="hidden" name="credit_earned1" value="3.0">      </td>
+      <td><font size="1">AMBUAN, JOHN ROWELLE A. </font></td>
+      <td><font size="1">BSCS-DS
+        
+		
+        </font></td>
+
+
+      <td align="center"><font size="1">1</font></td>
+      
+      <td align="center">
+	  	
+        <input name="grade1" type="text" size="3" class="textbox" onfocus="navRollOver(&#39;msg1&#39;, &#39;on&#39;);style.backgroundColor=&#39;#D3EBFF&#39;" onblur="navRollOver(&#39;msg1&#39;, &#39;off&#39;);style.backgroundColor=&#39;white&#39;;updateCheckBox(document.gsheet.grade1, document.gsheet.save_1); UpdateRemarks(&#39;grade1&#39;,&#39;remark1&#39;,document.gsheet.save_1)" onkeyup="AllowOnlyFloat(&#39;gsheet&#39;,&#39;grade1&#39;); MoveNext(event, document.gsheet.attendance2,document.gsheet.grade2);">
+	  <!--onKeyPress=" if(event.keyCode<46 || event.keyCode== 47 || event.keyCode > 57) event.returnValue=false;"-->
+         </td>
+ 
+      <td>  <select name="remark1" style="font-size:10px" tabindex="-1" onchange="validateGrade(document.gsheet.grade_percent1,document.gsheet.grade1,document.gsheet.save_1,document.gsheet.remark1)">
+          
+          		
+<option value="1">Passed</option>
+<option value="2">Failed</option>
+<option value="5">Incomplete</option>
+<option value="11">UD</option>
+<option value="12">OD</option>
+<option value="13">W</option>
+<option value="14">NC</option>
+<option value="15">FA</option>
+          
+        </select> </td>
+      <td width="6%" align="center"> <input type="checkbox" name="save_1" value="1" tabindex="-1" onclick="validateGrade(document.gsheet.grade_percent1,document.gsheet.grade1,document.gsheet.save_1,document.gsheet.remark1)"></td>
+    </tr>
+    
+    <tr class="nav" id="msg2" onmouseover="navRollOver(&#39;msg2&#39;, &#39;on&#39;)" onmouseout="navRollOver(&#39;msg2&#39;, &#39;off&#39;)">
+      <td><font size="1">3</font>
+      </td><td height="25"><font size="1">23-0328-307</font>
+	  <input type="hidden" name="cur_hist2" value="172117">
+      <input type="hidden" name="cur_index2" value="24873">
+      <input type="hidden" name="credit_earned2" value="3.0">      </td>
+      <td><font size="1">ARDIENTE, SOFHIA NICOLE I. </font></td>
+      <td><font size="1">BSCS-DS
+        
+		
+        </font></td>
+
+
+      <td align="center"><font size="1">1</font></td>
+      
+      <td align="center">
+	  	
+        <input name="grade2" type="text" size="3" class="textbox" onfocus="navRollOver(&#39;msg2&#39;, &#39;on&#39;);style.backgroundColor=&#39;#D3EBFF&#39;" onblur="navRollOver(&#39;msg2&#39;, &#39;off&#39;);style.backgroundColor=&#39;white&#39;;updateCheckBox(document.gsheet.grade2, document.gsheet.save_2); UpdateRemarks(&#39;grade2&#39;,&#39;remark2&#39;,document.gsheet.save_2)" onkeyup="AllowOnlyFloat(&#39;gsheet&#39;,&#39;grade2&#39;); MoveNext(event, document.gsheet.attendance3,document.gsheet.grade3);">
+	  <!--onKeyPress=" if(event.keyCode<46 || event.keyCode== 47 || event.keyCode > 57) event.returnValue=false;"-->
+         </td>
+ 
+      <td>  <select name="remark2" style="font-size:10px" tabindex="-1" onchange="validateGrade(document.gsheet.grade_percent2,document.gsheet.grade2,document.gsheet.save_2,document.gsheet.remark2)">
+          
+          		
+<option value="1">Passed</option>
+<option value="2">Failed</option>
+<option value="5">Incomplete</option>
+<option value="11">UD</option>
+<option value="12">OD</option>
+<option value="13">W</option>
+<option value="14">NC</option>
+<option value="15">FA</option>
+          
+        </select> </td>
+      <td width="6%" align="center"> <input type="checkbox" name="save_2" value="1" tabindex="-1" onclick="validateGrade(document.gsheet.grade_percent2,document.gsheet.grade2,document.gsheet.save_2,document.gsheet.remark2)"></td>
+    </tr>
+    
+    <tr class="nav" id="msg3" onmouseover="navRollOver(&#39;msg3&#39;, &#39;on&#39;)" onmouseout="navRollOver(&#39;msg3&#39;, &#39;off&#39;)">
+      <td><font size="1">4</font>
+      </td><td height="25"><font size="1">25-2551-942</font>
+	  <input type="hidden" name="cur_hist3" value="172295">
+      <input type="hidden" name="cur_index3" value="24873">
+      <input type="hidden" name="credit_earned3" value="3.0">      </td>
+      <td><font size="1">ATIENZA, JOHN MICHAEL G. </font></td>
+      <td><font size="1">BSCS-DS
+        
+		
+        </font></td>
+
+
+      <td align="center"><font size="1">1</font></td>
+      
+      <td align="center">
+	  	
+        <input name="grade3" type="text" size="3" class="textbox" onfocus="navRollOver(&#39;msg3&#39;, &#39;on&#39;);style.backgroundColor=&#39;#D3EBFF&#39;" onblur="navRollOver(&#39;msg3&#39;, &#39;off&#39;);style.backgroundColor=&#39;white&#39;;updateCheckBox(document.gsheet.grade3, document.gsheet.save_3); UpdateRemarks(&#39;grade3&#39;,&#39;remark3&#39;,document.gsheet.save_3)" onkeyup="AllowOnlyFloat(&#39;gsheet&#39;,&#39;grade3&#39;); MoveNext(event, document.gsheet.attendance4,document.gsheet.grade4);">
+	  <!--onKeyPress=" if(event.keyCode<46 || event.keyCode== 47 || event.keyCode > 57) event.returnValue=false;"-->
+         </td>
+ 
+      <td>  <select name="remark3" style="font-size:10px" tabindex="-1" onchange="validateGrade(document.gsheet.grade_percent3,document.gsheet.grade3,document.gsheet.save_3,document.gsheet.remark3)">
+          
+          		
+<option value="1">Passed</option>
+<option value="2">Failed</option>
+<option value="5">Incomplete</option>
+<option value="11">UD</option>
+<option value="12">OD</option>
+<option value="13">W</option>
+<option value="14">NC</option>
+<option value="15">FA</option>
+          
+        </select> </td>
+      <td width="6%" align="center"> <input type="checkbox" name="save_3" value="1" tabindex="-1" onclick="validateGrade(document.gsheet.grade_percent3,document.gsheet.grade3,document.gsheet.save_3,document.gsheet.remark3)"></td>
+    </tr>
+    
+    <tr class="nav" id="msg4" onmouseover="navRollOver(&#39;msg4&#39;, &#39;on&#39;)" onmouseout="navRollOver(&#39;msg4&#39;, &#39;off&#39;)">
+      <td><font size="1">5</font>
+      </td><td height="25"><font size="1">23-0397-955</font>
+	  <input type="hidden" name="cur_hist4" value="171949">
+      <input type="hidden" name="cur_index4" value="24873">
+      <input type="hidden" name="credit_earned4" value="3.0">      </td>
+      <td><font size="1">BAEL, ANDREI LAWRENCE D. </font></td>
+      <td><font size="1">BSCS-DS
+        
+		
+        </font></td>
+
+
+      <td align="center"><font size="1">1</font></td>
+      
+      <td align="center">
+	  	
+        <input name="grade4" type="text" size="3" class="textbox" onfocus="navRollOver(&#39;msg4&#39;, &#39;on&#39;);style.backgroundColor=&#39;#D3EBFF&#39;" onblur="navRollOver(&#39;msg4&#39;, &#39;off&#39;);style.backgroundColor=&#39;white&#39;;updateCheckBox(document.gsheet.grade4, document.gsheet.save_4); UpdateRemarks(&#39;grade4&#39;,&#39;remark4&#39;,document.gsheet.save_4)" onkeyup="AllowOnlyFloat(&#39;gsheet&#39;,&#39;grade4&#39;); MoveNext(event, document.gsheet.attendance5,document.gsheet.grade5);">
+	  <!--onKeyPress=" if(event.keyCode<46 || event.keyCode== 47 || event.keyCode > 57) event.returnValue=false;"-->
+         </td>
+ 
+      <td>  <select name="remark4" style="font-size:10px" tabindex="-1" onchange="validateGrade(document.gsheet.grade_percent4,document.gsheet.grade4,document.gsheet.save_4,document.gsheet.remark4)">
+          
+          		
+<option value="1">Passed</option>
+<option value="2">Failed</option>
+<option value="5">Incomplete</option>
+<option value="11">UD</option>
+<option value="12">OD</option>
+<option value="13">W</option>
+<option value="14">NC</option>
+<option value="15">FA</option>
+          
+        </select> </td>
+      <td width="6%" align="center"> <input type="checkbox" name="save_4" value="1" tabindex="-1" onclick="validateGrade(document.gsheet.grade_percent4,document.gsheet.grade4,document.gsheet.save_4,document.gsheet.remark4)"></td>
+    </tr>
+    
+    <tr class="nav" id="msg5" onmouseover="navRollOver(&#39;msg5&#39;, &#39;on&#39;)" onmouseout="navRollOver(&#39;msg5&#39;, &#39;off&#39;)">
+      <td><font size="1">6</font>
+      </td><td height="25"><font size="1">25-2562-807</font>
+	  <input type="hidden" name="cur_hist5" value="172880">
+      <input type="hidden" name="cur_index5" value="24873">
+      <input type="hidden" name="credit_earned5" value="3.0">      </td>
+      <td><font size="1">BEROSIL, RENEE KRISTINE D. </font></td>
+      <td><font size="1">BSCS-DS
+        
+		
+        </font></td>
+
+
+      <td align="center"><font size="1">1</font></td>
+      
+      <td align="center">
+	  	
+        <input name="grade5" type="text" size="3" class="textbox" onfocus="navRollOver(&#39;msg5&#39;, &#39;on&#39;);style.backgroundColor=&#39;#D3EBFF&#39;" onblur="navRollOver(&#39;msg5&#39;, &#39;off&#39;);style.backgroundColor=&#39;white&#39;;updateCheckBox(document.gsheet.grade5, document.gsheet.save_5); UpdateRemarks(&#39;grade5&#39;,&#39;remark5&#39;,document.gsheet.save_5)" onkeyup="AllowOnlyFloat(&#39;gsheet&#39;,&#39;grade5&#39;); MoveNext(event, document.gsheet.attendance6,document.gsheet.grade6);">
+	  <!--onKeyPress=" if(event.keyCode<46 || event.keyCode== 47 || event.keyCode > 57) event.returnValue=false;"-->
+         </td>
+ 
+      <td>  <select name="remark5" style="font-size:10px" tabindex="-1" onchange="validateGrade(document.gsheet.grade_percent5,document.gsheet.grade5,document.gsheet.save_5,document.gsheet.remark5)">
+          
+          		
+<option value="1">Passed</option>
+<option value="2">Failed</option>
+<option value="5">Incomplete</option>
+<option value="11">UD</option>
+<option value="12">OD</option>
+<option value="13">W</option>
+<option value="14">NC</option>
+<option value="15">FA</option>
+          
+        </select> </td>
+      <td width="6%" align="center"> <input type="checkbox" name="save_5" value="1" tabindex="-1" onclick="validateGrade(document.gsheet.grade_percent5,document.gsheet.grade5,document.gsheet.save_5,document.gsheet.remark5)"></td>
+    </tr>
+    
+    <tr class="nav" id="msg6" onmouseover="navRollOver(&#39;msg6&#39;, &#39;on&#39;)" onmouseout="navRollOver(&#39;msg6&#39;, &#39;off&#39;)">
+      <td><font size="1">7</font>
+      </td><td height="25"><font size="1">25-2062-143</font>
+	  <input type="hidden" name="cur_hist6" value="171976">
+      <input type="hidden" name="cur_index6" value="24873">
+      <input type="hidden" name="credit_earned6" value="3.0">      </td>
+      <td><font size="1">BOSITO, KALIEL OSH A. </font></td>
+      <td><font size="1">BSCS-DS
+        
+		
+        </font></td>
+
+
+      <td align="center"><font size="1">1</font></td>
+      
+      <td align="center">
+	  	
+        <input name="grade6" type="text" size="3" class="textbox" onfocus="navRollOver(&#39;msg6&#39;, &#39;on&#39;);style.backgroundColor=&#39;#D3EBFF&#39;" onblur="navRollOver(&#39;msg6&#39;, &#39;off&#39;);style.backgroundColor=&#39;white&#39;;updateCheckBox(document.gsheet.grade6, document.gsheet.save_6); UpdateRemarks(&#39;grade6&#39;,&#39;remark6&#39;,document.gsheet.save_6)" onkeyup="AllowOnlyFloat(&#39;gsheet&#39;,&#39;grade6&#39;); MoveNext(event, document.gsheet.attendance7,document.gsheet.grade7);">
+	  <!--onKeyPress=" if(event.keyCode<46 || event.keyCode== 47 || event.keyCode > 57) event.returnValue=false;"-->
+         </td>
+ 
+      <td>  <select name="remark6" style="font-size:10px" tabindex="-1" onchange="validateGrade(document.gsheet.grade_percent6,document.gsheet.grade6,document.gsheet.save_6,document.gsheet.remark6)">
+          
+          		
+<option value="1">Passed</option>
+<option value="2">Failed</option>
+<option value="5">Incomplete</option>
+<option value="11">UD</option>
+<option value="12">OD</option>
+<option value="13">W</option>
+<option value="14">NC</option>
+<option value="15">FA</option>
+          
+        </select> </td>
+      <td width="6%" align="center"> <input type="checkbox" name="save_6" value="1" tabindex="-1" onclick="validateGrade(document.gsheet.grade_percent6,document.gsheet.grade6,document.gsheet.save_6,document.gsheet.remark6)"></td>
+    </tr>
+    
+    <tr class="nav" id="msg7" onmouseover="navRollOver(&#39;msg7&#39;, &#39;on&#39;)" onmouseout="navRollOver(&#39;msg7&#39;, &#39;off&#39;)">
+      <td><font size="1">8</font>
+      </td><td height="25"><font size="1">25-2422-239</font>
+	  <input type="hidden" name="cur_hist7" value="172453">
+      <input type="hidden" name="cur_index7" value="24873">
+      <input type="hidden" name="credit_earned7" value="3.0">      </td>
+      <td><font size="1">CABRERA, THEODORE KELLY G. </font></td>
+      <td><font size="1">BSCS-DS
+        
+		
+        </font></td>
+
+
+      <td align="center"><font size="1">1</font></td>
+      
+      <td align="center">
+	  	
+        <input name="grade7" type="text" size="3" class="textbox" onfocus="navRollOver(&#39;msg7&#39;, &#39;on&#39;);style.backgroundColor=&#39;#D3EBFF&#39;" onblur="navRollOver(&#39;msg7&#39;, &#39;off&#39;);style.backgroundColor=&#39;white&#39;;updateCheckBox(document.gsheet.grade7, document.gsheet.save_7); UpdateRemarks(&#39;grade7&#39;,&#39;remark7&#39;,document.gsheet.save_7)" onkeyup="AllowOnlyFloat(&#39;gsheet&#39;,&#39;grade7&#39;); MoveNext(event, document.gsheet.attendance8,document.gsheet.grade8);">
+	  <!--onKeyPress=" if(event.keyCode<46 || event.keyCode== 47 || event.keyCode > 57) event.returnValue=false;"-->
+         </td>
+ 
+      <td>  <select name="remark7" style="font-size:10px" tabindex="-1" onchange="validateGrade(document.gsheet.grade_percent7,document.gsheet.grade7,document.gsheet.save_7,document.gsheet.remark7)">
+          
+          		
+<option value="1">Passed</option>
+<option value="2">Failed</option>
+<option value="5">Incomplete</option>
+<option value="11">UD</option>
+<option value="12">OD</option>
+<option value="13">W</option>
+<option value="14">NC</option>
+<option value="15">FA</option>
+          
+        </select> </td>
+      <td width="6%" align="center"> <input type="checkbox" name="save_7" value="1" tabindex="-1" onclick="validateGrade(document.gsheet.grade_percent7,document.gsheet.grade7,document.gsheet.save_7,document.gsheet.remark7)"></td>
+    </tr>
+    
+    <tr class="nav" id="msg8" onmouseover="navRollOver(&#39;msg8&#39;, &#39;on&#39;)" onmouseout="navRollOver(&#39;msg8&#39;, &#39;off&#39;)">
+      <td><font size="1">9</font>
+      </td><td height="25"><font size="1">25-2205-910</font>
+	  <input type="hidden" name="cur_hist8" value="172620">
+      <input type="hidden" name="cur_index8" value="24873">
+      <input type="hidden" name="credit_earned8" value="3.0">      </td>
+      <td><font size="1">CANALITA, CHINO MA. SANTI F. </font></td>
+      <td><font size="1">BSCS-DS
+        
+		
+        </font></td>
+
+
+      <td align="center"><font size="1">1</font></td>
+      
+      <td align="center">
+	  	
+        <input name="grade8" type="text" size="3" class="textbox" onfocus="navRollOver(&#39;msg8&#39;, &#39;on&#39;);style.backgroundColor=&#39;#D3EBFF&#39;" onblur="navRollOver(&#39;msg8&#39;, &#39;off&#39;);style.backgroundColor=&#39;white&#39;;updateCheckBox(document.gsheet.grade8, document.gsheet.save_8); UpdateRemarks(&#39;grade8&#39;,&#39;remark8&#39;,document.gsheet.save_8)" onkeyup="AllowOnlyFloat(&#39;gsheet&#39;,&#39;grade8&#39;); MoveNext(event, document.gsheet.attendance9,document.gsheet.grade9);">
+	  <!--onKeyPress=" if(event.keyCode<46 || event.keyCode== 47 || event.keyCode > 57) event.returnValue=false;"-->
+         </td>
+ 
+      <td>  <select name="remark8" style="font-size:10px" tabindex="-1" onchange="validateGrade(document.gsheet.grade_percent8,document.gsheet.grade8,document.gsheet.save_8,document.gsheet.remark8)">
+          
+          		
+<option value="1">Passed</option>
+<option value="2">Failed</option>
+<option value="5">Incomplete</option>
+<option value="11">UD</option>
+<option value="12">OD</option>
+<option value="13">W</option>
+<option value="14">NC</option>
+<option value="15">FA</option>
+          
+        </select> </td>
+      <td width="6%" align="center"> <input type="checkbox" name="save_8" value="1" tabindex="-1" onclick="validateGrade(document.gsheet.grade_percent8,document.gsheet.grade8,document.gsheet.save_8,document.gsheet.remark8)"></td>
+    </tr>
+    
+    <tr class="nav" id="msg9" onmouseover="navRollOver(&#39;msg9&#39;, &#39;on&#39;)" onmouseout="navRollOver(&#39;msg9&#39;, &#39;off&#39;)">
+      <td><font size="1">10</font>
+      </td><td height="25"><font size="1">22-1867-386</font>
+	  <input type="hidden" name="cur_hist9" value="173405">
+      <input type="hidden" name="cur_index9" value="24873">
+      <input type="hidden" name="credit_earned9" value="3.0">      </td>
+      <td><font size="1">CANTAROS, RICH ANDREI </font></td>
+      <td><font size="1">BSCS-DS
+        
+		
+        </font></td>
+
+
+      <td align="center"><font size="1">1</font></td>
+      
+      <td align="center">
+	  	
+        <input name="grade9" type="text" size="3" class="textbox" onfocus="navRollOver(&#39;msg9&#39;, &#39;on&#39;);style.backgroundColor=&#39;#D3EBFF&#39;" onblur="navRollOver(&#39;msg9&#39;, &#39;off&#39;);style.backgroundColor=&#39;white&#39;;updateCheckBox(document.gsheet.grade9, document.gsheet.save_9); UpdateRemarks(&#39;grade9&#39;,&#39;remark9&#39;,document.gsheet.save_9)" onkeyup="AllowOnlyFloat(&#39;gsheet&#39;,&#39;grade9&#39;); MoveNext(event, document.gsheet.attendance10,document.gsheet.grade10);">
+	  <!--onKeyPress=" if(event.keyCode<46 || event.keyCode== 47 || event.keyCode > 57) event.returnValue=false;"-->
+         </td>
+ 
+      <td>  <select name="remark9" style="font-size:10px" tabindex="-1" onchange="validateGrade(document.gsheet.grade_percent9,document.gsheet.grade9,document.gsheet.save_9,document.gsheet.remark9)">
+          
+          		
+<option value="1">Passed</option>
+<option value="2">Failed</option>
+<option value="5">Incomplete</option>
+<option value="11">UD</option>
+<option value="12">OD</option>
+<option value="13">W</option>
+<option value="14">NC</option>
+<option value="15">FA</option>
+          
+        </select> </td>
+      <td width="6%" align="center"> <input type="checkbox" name="save_9" value="1" tabindex="-1" onclick="validateGrade(document.gsheet.grade_percent9,document.gsheet.grade9,document.gsheet.save_9,document.gsheet.remark9)"></td>
+    </tr>
+    
+    <tr class="nav" id="msg10" onmouseover="navRollOver(&#39;msg10&#39;, &#39;on&#39;)" onmouseout="navRollOver(&#39;msg10&#39;, &#39;off&#39;)">
+      <td><font size="1">11</font>
+      </td><td height="25"><font size="1">21-0561-540</font>
+	  <input type="hidden" name="cur_hist10" value="172526">
+      <input type="hidden" name="cur_index10" value="24873">
+      <input type="hidden" name="credit_earned10" value="3.0">      </td>
+      <td><font size="1">CASTILLO, YVES CHANDLER E. </font></td>
+      <td><font size="1">BSCS-DS
+        
+		
+        </font></td>
+
+
+      <td align="center"><font size="1">2</font></td>
+      
+      <td align="center">
+	  	
+        <input name="grade10" type="text" size="3" class="textbox" onfocus="navRollOver(&#39;msg10&#39;, &#39;on&#39;);style.backgroundColor=&#39;#D3EBFF&#39;" onblur="navRollOver(&#39;msg10&#39;, &#39;off&#39;);style.backgroundColor=&#39;white&#39;;updateCheckBox(document.gsheet.grade10, document.gsheet.save_10); UpdateRemarks(&#39;grade10&#39;,&#39;remark10&#39;,document.gsheet.save_10)" onkeyup="AllowOnlyFloat(&#39;gsheet&#39;,&#39;grade10&#39;); MoveNext(event, document.gsheet.attendance11,document.gsheet.grade11);">
+	  <!--onKeyPress=" if(event.keyCode<46 || event.keyCode== 47 || event.keyCode > 57) event.returnValue=false;"-->
+         </td>
+ 
+      <td>  <select name="remark10" style="font-size:10px" tabindex="-1" onchange="validateGrade(document.gsheet.grade_percent10,document.gsheet.grade10,document.gsheet.save_10,document.gsheet.remark10)">
+          
+          		
+<option value="1">Passed</option>
+<option value="2">Failed</option>
+<option value="5">Incomplete</option>
+<option value="11">UD</option>
+<option value="12">OD</option>
+<option value="13">W</option>
+<option value="14">NC</option>
+<option value="15">FA</option>
+          
+        </select> </td>
+      <td width="6%" align="center"> <input type="checkbox" name="save_10" value="1" tabindex="-1" onclick="validateGrade(document.gsheet.grade_percent10,document.gsheet.grade10,document.gsheet.save_10,document.gsheet.remark10)"></td>
+    </tr>
+    
+    <tr class="nav" id="msg11" onmouseover="navRollOver(&#39;msg11&#39;, &#39;on&#39;)" onmouseout="navRollOver(&#39;msg11&#39;, &#39;off&#39;)">
+      <td><font size="1">12</font>
+      </td><td height="25"><font size="1">23-0513-333</font>
+	  <input type="hidden" name="cur_hist11" value="172932">
+      <input type="hidden" name="cur_index11" value="24873">
+      <input type="hidden" name="credit_earned11" value="3.0">      </td>
+      <td><font size="1">CELADEZ, JED CEDRIC G. </font></td>
+      <td><font size="1">BSCS-DS
+        
+		
+        </font></td>
+
+
+      <td align="center"><font size="1">1</font></td>
+      
+      <td align="center">
+	  	
+        <input name="grade11" type="text" size="3" class="textbox" onfocus="navRollOver(&#39;msg11&#39;, &#39;on&#39;);style.backgroundColor=&#39;#D3EBFF&#39;" onblur="navRollOver(&#39;msg11&#39;, &#39;off&#39;);style.backgroundColor=&#39;white&#39;;updateCheckBox(document.gsheet.grade11, document.gsheet.save_11); UpdateRemarks(&#39;grade11&#39;,&#39;remark11&#39;,document.gsheet.save_11)" onkeyup="AllowOnlyFloat(&#39;gsheet&#39;,&#39;grade11&#39;); MoveNext(event, document.gsheet.attendance12,document.gsheet.grade12);">
+	  <!--onKeyPress=" if(event.keyCode<46 || event.keyCode== 47 || event.keyCode > 57) event.returnValue=false;"-->
+         </td>
+ 
+      <td>  <select name="remark11" style="font-size:10px" tabindex="-1" onchange="validateGrade(document.gsheet.grade_percent11,document.gsheet.grade11,document.gsheet.save_11,document.gsheet.remark11)">
+          
+          		
+<option value="1">Passed</option>
+<option value="2">Failed</option>
+<option value="5">Incomplete</option>
+<option value="11">UD</option>
+<option value="12">OD</option>
+<option value="13">W</option>
+<option value="14">NC</option>
+<option value="15">FA</option>
+          
+        </select> </td>
+      <td width="6%" align="center"> <input type="checkbox" name="save_11" value="1" tabindex="-1" onclick="validateGrade(document.gsheet.grade_percent11,document.gsheet.grade11,document.gsheet.save_11,document.gsheet.remark11)"></td>
+    </tr>
+    
+    <tr class="nav" id="msg12" onmouseover="navRollOver(&#39;msg12&#39;, &#39;on&#39;)" onmouseout="navRollOver(&#39;msg12&#39;, &#39;off&#39;)">
+      <td><font size="1">13</font>
+      </td><td height="25"><font size="1">23-2248-502</font>
+	  <input type="hidden" name="cur_hist12" value="175030">
+      <input type="hidden" name="cur_index12" value="24873">
+      <input type="hidden" name="credit_earned12" value="3.0">      </td>
+      <td><font size="1">DEL ROSARIO, ALVIN JOHN H. </font></td>
+      <td><font size="1">BSCS-DS
+        
+		
+        </font></td>
+
+
+      <td align="center"><font size="1">1</font></td>
+      
+      <td align="center">
+	  	
+        <input name="grade12" type="text" size="3" class="textbox" onfocus="navRollOver(&#39;msg12&#39;, &#39;on&#39;);style.backgroundColor=&#39;#D3EBFF&#39;" onblur="navRollOver(&#39;msg12&#39;, &#39;off&#39;);style.backgroundColor=&#39;white&#39;;updateCheckBox(document.gsheet.grade12, document.gsheet.save_12); UpdateRemarks(&#39;grade12&#39;,&#39;remark12&#39;,document.gsheet.save_12)" onkeyup="AllowOnlyFloat(&#39;gsheet&#39;,&#39;grade12&#39;); MoveNext(event, document.gsheet.attendance13,document.gsheet.grade13);">
+	  <!--onKeyPress=" if(event.keyCode<46 || event.keyCode== 47 || event.keyCode > 57) event.returnValue=false;"-->
+         </td>
+ 
+      <td>  <select name="remark12" style="font-size:10px" tabindex="-1" onchange="validateGrade(document.gsheet.grade_percent12,document.gsheet.grade12,document.gsheet.save_12,document.gsheet.remark12)">
+          
+          		
+<option value="1">Passed</option>
+<option value="2">Failed</option>
+<option value="5">Incomplete</option>
+<option value="11">UD</option>
+<option value="12">OD</option>
+<option value="13">W</option>
+<option value="14">NC</option>
+<option value="15">FA</option>
+          
+        </select> </td>
+      <td width="6%" align="center"> <input type="checkbox" name="save_12" value="1" tabindex="-1" onclick="validateGrade(document.gsheet.grade_percent12,document.gsheet.grade12,document.gsheet.save_12,document.gsheet.remark12)"></td>
+    </tr>
+    
+    <tr class="nav" id="msg13" onmouseover="navRollOver(&#39;msg13&#39;, &#39;on&#39;)" onmouseout="navRollOver(&#39;msg13&#39;, &#39;off&#39;)">
+      <td><font size="1">14</font>
+      </td><td height="25"><font size="1">25-2460-546</font>
+	  <input type="hidden" name="cur_hist13" value="173535">
+      <input type="hidden" name="cur_index13" value="24873">
+      <input type="hidden" name="credit_earned13" value="3.0">      </td>
+      <td><font size="1">DUPA, NEOMI ASHLEY SABIEN I. </font></td>
+      <td><font size="1">BSCS-DS
+        
+		
+        </font></td>
+
+
+      <td align="center"><font size="1">1</font></td>
+      
+      <td align="center">
+	  	
+        <input name="grade13" type="text" size="3" class="textbox" onfocus="navRollOver(&#39;msg13&#39;, &#39;on&#39;);style.backgroundColor=&#39;#D3EBFF&#39;" onblur="navRollOver(&#39;msg13&#39;, &#39;off&#39;);style.backgroundColor=&#39;white&#39;;updateCheckBox(document.gsheet.grade13, document.gsheet.save_13); UpdateRemarks(&#39;grade13&#39;,&#39;remark13&#39;,document.gsheet.save_13)" onkeyup="AllowOnlyFloat(&#39;gsheet&#39;,&#39;grade13&#39;); MoveNext(event, document.gsheet.attendance14,document.gsheet.grade14);">
+	  <!--onKeyPress=" if(event.keyCode<46 || event.keyCode== 47 || event.keyCode > 57) event.returnValue=false;"-->
+         </td>
+ 
+      <td>  <select name="remark13" style="font-size:10px" tabindex="-1" onchange="validateGrade(document.gsheet.grade_percent13,document.gsheet.grade13,document.gsheet.save_13,document.gsheet.remark13)">
+          
+          		
+<option value="1">Passed</option>
+<option value="2">Failed</option>
+<option value="5">Incomplete</option>
+<option value="11">UD</option>
+<option value="12">OD</option>
+<option value="13">W</option>
+<option value="14">NC</option>
+<option value="15">FA</option>
+          
+        </select> </td>
+      <td width="6%" align="center"> <input type="checkbox" name="save_13" value="1" tabindex="-1" onclick="validateGrade(document.gsheet.grade_percent13,document.gsheet.grade13,document.gsheet.save_13,document.gsheet.remark13)"></td>
+    </tr>
+    
+    <tr class="nav" id="msg14" onmouseover="navRollOver(&#39;msg14&#39;, &#39;on&#39;)" onmouseout="navRollOver(&#39;msg14&#39;, &#39;off&#39;)">
+      <td><font size="1">15</font>
+      </td><td height="25"><font size="1">23-0426-860</font>
+	  <input type="hidden" name="cur_hist14" value="172621">
+      <input type="hidden" name="cur_index14" value="24873">
+      <input type="hidden" name="credit_earned14" value="3.0">      </td>
+      <td><font size="1">GRIAR, BILL GEDRICK D. </font></td>
+      <td><font size="1">BSCS-DS
+        
+		
+        </font></td>
+
+
+      <td align="center"><font size="1">1</font></td>
+      
+      <td align="center">
+	  	
+        <input name="grade14" type="text" size="3" class="textbox" onfocus="navRollOver(&#39;msg14&#39;, &#39;on&#39;);style.backgroundColor=&#39;#D3EBFF&#39;" onblur="navRollOver(&#39;msg14&#39;, &#39;off&#39;);style.backgroundColor=&#39;white&#39;;updateCheckBox(document.gsheet.grade14, document.gsheet.save_14); UpdateRemarks(&#39;grade14&#39;,&#39;remark14&#39;,document.gsheet.save_14)" onkeyup="AllowOnlyFloat(&#39;gsheet&#39;,&#39;grade14&#39;); MoveNext(event, document.gsheet.attendance15,document.gsheet.grade15);">
+	  <!--onKeyPress=" if(event.keyCode<46 || event.keyCode== 47 || event.keyCode > 57) event.returnValue=false;"-->
+         </td>
+ 
+      <td>  <select name="remark14" style="font-size:10px" tabindex="-1" onchange="validateGrade(document.gsheet.grade_percent14,document.gsheet.grade14,document.gsheet.save_14,document.gsheet.remark14)">
+          
+          		
+<option value="1">Passed</option>
+<option value="2">Failed</option>
+<option value="5">Incomplete</option>
+<option value="11">UD</option>
+<option value="12">OD</option>
+<option value="13">W</option>
+<option value="14">NC</option>
+<option value="15">FA</option>
+          
+        </select> </td>
+      <td width="6%" align="center"> <input type="checkbox" name="save_14" value="1" tabindex="-1" onclick="validateGrade(document.gsheet.grade_percent14,document.gsheet.grade14,document.gsheet.save_14,document.gsheet.remark14)"></td>
+    </tr>
+    
+    <tr class="nav" id="msg15" onmouseover="navRollOver(&#39;msg15&#39;, &#39;on&#39;)" onmouseout="navRollOver(&#39;msg15&#39;, &#39;off&#39;)">
+      <td><font size="1">16</font>
+      </td><td height="25"><font size="1">23-2051-411</font>
+	  <input type="hidden" name="cur_hist15" value="175074">
+      <input type="hidden" name="cur_index15" value="24873">
+      <input type="hidden" name="credit_earned15" value="3.0">      </td>
+      <td><font size="1">GUARDO, DON JOSHUA G. </font></td>
+      <td><font size="1">BSCS-DS
+        
+		
+        </font></td>
+
+
+      <td align="center"><font size="1">1</font></td>
+      
+      <td align="center">
+	  	
+        <input name="grade15" type="text" size="3" class="textbox" onfocus="navRollOver(&#39;msg15&#39;, &#39;on&#39;);style.backgroundColor=&#39;#D3EBFF&#39;" onblur="navRollOver(&#39;msg15&#39;, &#39;off&#39;);style.backgroundColor=&#39;white&#39;;updateCheckBox(document.gsheet.grade15, document.gsheet.save_15); UpdateRemarks(&#39;grade15&#39;,&#39;remark15&#39;,document.gsheet.save_15)" onkeyup="AllowOnlyFloat(&#39;gsheet&#39;,&#39;grade15&#39;); MoveNext(event, document.gsheet.attendance16,document.gsheet.grade16);">
+	  <!--onKeyPress=" if(event.keyCode<46 || event.keyCode== 47 || event.keyCode > 57) event.returnValue=false;"-->
+         </td>
+ 
+      <td>  <select name="remark15" style="font-size:10px" tabindex="-1" onchange="validateGrade(document.gsheet.grade_percent15,document.gsheet.grade15,document.gsheet.save_15,document.gsheet.remark15)">
+          
+          		
+<option value="1">Passed</option>
+<option value="2">Failed</option>
+<option value="5">Incomplete</option>
+<option value="11">UD</option>
+<option value="12">OD</option>
+<option value="13">W</option>
+<option value="14">NC</option>
+<option value="15">FA</option>
+          
+        </select> </td>
+      <td width="6%" align="center"> <input type="checkbox" name="save_15" value="1" tabindex="-1" onclick="validateGrade(document.gsheet.grade_percent15,document.gsheet.grade15,document.gsheet.save_15,document.gsheet.remark15)"></td>
+    </tr>
+    
+    <tr class="nav" id="msg16" onmouseover="navRollOver(&#39;msg16&#39;, &#39;on&#39;)" onmouseout="navRollOver(&#39;msg16&#39;, &#39;off&#39;)">
+      <td><font size="1">17</font>
+      </td><td height="25"><font size="1">25-1172-125</font>
+	  <input type="hidden" name="cur_hist16" value="173118">
+      <input type="hidden" name="cur_index16" value="24873">
+      <input type="hidden" name="credit_earned16" value="3.0">      </td>
+      <td><font size="1">GUINTO, JUAN ALPHONSE VALENTIN A. </font></td>
+      <td><font size="1">BSCS-DS
+        
+		
+        </font></td>
+
+
+      <td align="center"><font size="1">1</font></td>
+      
+      <td align="center">
+	  	
+        <input name="grade16" type="text" size="3" class="textbox" onfocus="navRollOver(&#39;msg16&#39;, &#39;on&#39;);style.backgroundColor=&#39;#D3EBFF&#39;" onblur="navRollOver(&#39;msg16&#39;, &#39;off&#39;);style.backgroundColor=&#39;white&#39;;updateCheckBox(document.gsheet.grade16, document.gsheet.save_16); UpdateRemarks(&#39;grade16&#39;,&#39;remark16&#39;,document.gsheet.save_16)" onkeyup="AllowOnlyFloat(&#39;gsheet&#39;,&#39;grade16&#39;); MoveNext(event, document.gsheet.attendance17,document.gsheet.grade17);">
+	  <!--onKeyPress=" if(event.keyCode<46 || event.keyCode== 47 || event.keyCode > 57) event.returnValue=false;"-->
+         </td>
+ 
+      <td>  <select name="remark16" style="font-size:10px" tabindex="-1" onchange="validateGrade(document.gsheet.grade_percent16,document.gsheet.grade16,document.gsheet.save_16,document.gsheet.remark16)">
+          
+          		
+<option value="1">Passed</option>
+<option value="2">Failed</option>
+<option value="5">Incomplete</option>
+<option value="11">UD</option>
+<option value="12">OD</option>
+<option value="13">W</option>
+<option value="14">NC</option>
+<option value="15">FA</option>
+          
+        </select> </td>
+      <td width="6%" align="center"> <input type="checkbox" name="save_16" value="1" tabindex="-1" onclick="validateGrade(document.gsheet.grade_percent16,document.gsheet.grade16,document.gsheet.save_16,document.gsheet.remark16)"></td>
+    </tr>
+    
+    <tr class="nav" id="msg17" onmouseover="navRollOver(&#39;msg17&#39;, &#39;on&#39;)" onmouseout="navRollOver(&#39;msg17&#39;, &#39;off&#39;)">
+      <td><font size="1">18</font>
+      </td><td height="25"><font size="1">25-2129-601</font>
+	  <input type="hidden" name="cur_hist17" value="173210">
+      <input type="hidden" name="cur_index17" value="24873">
+      <input type="hidden" name="credit_earned17" value="3.0">      </td>
+      <td><font size="1">GUZMAN, FRANCESS PRICEAH S. </font></td>
+      <td><font size="1">BSCS-DS
+        
+		
+        </font></td>
+
+
+      <td align="center"><font size="1">1</font></td>
+      
+      <td align="center">
+	  	
+        <input name="grade17" type="text" size="3" class="textbox" onfocus="navRollOver(&#39;msg17&#39;, &#39;on&#39;);style.backgroundColor=&#39;#D3EBFF&#39;" onblur="navRollOver(&#39;msg17&#39;, &#39;off&#39;);style.backgroundColor=&#39;white&#39;;updateCheckBox(document.gsheet.grade17, document.gsheet.save_17); UpdateRemarks(&#39;grade17&#39;,&#39;remark17&#39;,document.gsheet.save_17)" onkeyup="AllowOnlyFloat(&#39;gsheet&#39;,&#39;grade17&#39;); MoveNext(event, document.gsheet.attendance18,document.gsheet.grade18);">
+	  <!--onKeyPress=" if(event.keyCode<46 || event.keyCode== 47 || event.keyCode > 57) event.returnValue=false;"-->
+         </td>
+ 
+      <td>  <select name="remark17" style="font-size:10px" tabindex="-1" onchange="validateGrade(document.gsheet.grade_percent17,document.gsheet.grade17,document.gsheet.save_17,document.gsheet.remark17)">
+          
+          		
+<option value="1">Passed</option>
+<option value="2">Failed</option>
+<option value="5">Incomplete</option>
+<option value="11">UD</option>
+<option value="12">OD</option>
+<option value="13">W</option>
+<option value="14">NC</option>
+<option value="15">FA</option>
+          
+        </select> </td>
+      <td width="6%" align="center"> <input type="checkbox" name="save_17" value="1" tabindex="-1" onclick="validateGrade(document.gsheet.grade_percent17,document.gsheet.grade17,document.gsheet.save_17,document.gsheet.remark17)"></td>
+    </tr>
+    
+    <tr class="nav" id="msg18" onmouseover="navRollOver(&#39;msg18&#39;, &#39;on&#39;)" onmouseout="navRollOver(&#39;msg18&#39;, &#39;off&#39;)">
+      <td><font size="1">19</font>
+      </td><td height="25"><font size="1">22-1279-759</font>
+	  <input type="hidden" name="cur_hist18" value="172039">
+      <input type="hidden" name="cur_index18" value="24873">
+      <input type="hidden" name="credit_earned18" value="3.0">      </td>
+      <td><font size="1">HADAP, CHRISTIAN JORGE A. </font></td>
+      <td><font size="1">BSCS-DS
+        
+		
+        </font></td>
+
+
+      <td align="center"><font size="1">1</font></td>
+      
+      <td align="center">
+	  	
+        <input name="grade18" type="text" size="3" class="textbox" onfocus="navRollOver(&#39;msg18&#39;, &#39;on&#39;);style.backgroundColor=&#39;#D3EBFF&#39;" onblur="navRollOver(&#39;msg18&#39;, &#39;off&#39;);style.backgroundColor=&#39;white&#39;;updateCheckBox(document.gsheet.grade18, document.gsheet.save_18); UpdateRemarks(&#39;grade18&#39;,&#39;remark18&#39;,document.gsheet.save_18)" onkeyup="AllowOnlyFloat(&#39;gsheet&#39;,&#39;grade18&#39;); MoveNext(event, document.gsheet.attendance19,document.gsheet.grade19);">
+	  <!--onKeyPress=" if(event.keyCode<46 || event.keyCode== 47 || event.keyCode > 57) event.returnValue=false;"-->
+         </td>
+ 
+      <td>  <select name="remark18" style="font-size:10px" tabindex="-1" onchange="validateGrade(document.gsheet.grade_percent18,document.gsheet.grade18,document.gsheet.save_18,document.gsheet.remark18)">
+          
+          		
+<option value="1">Passed</option>
+<option value="2">Failed</option>
+<option value="5">Incomplete</option>
+<option value="11">UD</option>
+<option value="12">OD</option>
+<option value="13">W</option>
+<option value="14">NC</option>
+<option value="15">FA</option>
+          
+        </select> </td>
+      <td width="6%" align="center"> <input type="checkbox" name="save_18" value="1" tabindex="-1" onclick="validateGrade(document.gsheet.grade_percent18,document.gsheet.grade18,document.gsheet.save_18,document.gsheet.remark18)"></td>
+    </tr>
+    
+    <tr class="nav" id="msg19" onmouseover="navRollOver(&#39;msg19&#39;, &#39;on&#39;)" onmouseout="navRollOver(&#39;msg19&#39;, &#39;off&#39;)">
+      <td><font size="1">20</font>
+      </td><td height="25"><font size="1">25-2377-890</font>
+	  <input type="hidden" name="cur_hist19" value="174540">
+      <input type="hidden" name="cur_index19" value="24873">
+      <input type="hidden" name="credit_earned19" value="3.0">      </td>
+      <td><font size="1">HAMBRE, YHARA NICOLE Q. </font></td>
+      <td><font size="1">BSCS-DS
+        
+		
+        </font></td>
+
+
+      <td align="center"><font size="1">1</font></td>
+      
+      <td align="center">
+	  	
+        <input name="grade19" type="text" size="3" class="textbox" onfocus="navRollOver(&#39;msg19&#39;, &#39;on&#39;);style.backgroundColor=&#39;#D3EBFF&#39;" onblur="navRollOver(&#39;msg19&#39;, &#39;off&#39;);style.backgroundColor=&#39;white&#39;;updateCheckBox(document.gsheet.grade19, document.gsheet.save_19); UpdateRemarks(&#39;grade19&#39;,&#39;remark19&#39;,document.gsheet.save_19)" onkeyup="AllowOnlyFloat(&#39;gsheet&#39;,&#39;grade19&#39;); MoveNext(event, document.gsheet.attendance20,document.gsheet.grade20);">
+	  <!--onKeyPress=" if(event.keyCode<46 || event.keyCode== 47 || event.keyCode > 57) event.returnValue=false;"-->
+         </td>
+ 
+      <td>  <select name="remark19" style="font-size:10px" tabindex="-1" onchange="validateGrade(document.gsheet.grade_percent19,document.gsheet.grade19,document.gsheet.save_19,document.gsheet.remark19)">
+          
+          		
+<option value="1">Passed</option>
+<option value="2">Failed</option>
+<option value="5">Incomplete</option>
+<option value="11">UD</option>
+<option value="12">OD</option>
+<option value="13">W</option>
+<option value="14">NC</option>
+<option value="15">FA</option>
+          
+        </select> </td>
+      <td width="6%" align="center"> <input type="checkbox" name="save_19" value="1" tabindex="-1" onclick="validateGrade(document.gsheet.grade_percent19,document.gsheet.grade19,document.gsheet.save_19,document.gsheet.remark19)"></td>
+    </tr>
+    
+    <tr class="nav" id="msg20" onmouseover="navRollOver(&#39;msg20&#39;, &#39;on&#39;)" onmouseout="navRollOver(&#39;msg20&#39;, &#39;off&#39;)">
+      <td><font size="1">21</font>
+      </td><td height="25"><font size="1">23-0455-222</font>
+	  <input type="hidden" name="cur_hist20" value="171974">
+      <input type="hidden" name="cur_index20" value="24873">
+      <input type="hidden" name="credit_earned20" value="3.0">      </td>
+      <td><font size="1">JAVIER, JULIAN WILEY S. </font></td>
+      <td><font size="1">BSCS-DS
+        
+		
+        </font></td>
+
+
+      <td align="center"><font size="1">1</font></td>
+      
+      <td align="center">
+	  	
+        <input name="grade20" type="text" size="3" class="textbox" onfocus="navRollOver(&#39;msg20&#39;, &#39;on&#39;);style.backgroundColor=&#39;#D3EBFF&#39;" onblur="navRollOver(&#39;msg20&#39;, &#39;off&#39;);style.backgroundColor=&#39;white&#39;;updateCheckBox(document.gsheet.grade20, document.gsheet.save_20); UpdateRemarks(&#39;grade20&#39;,&#39;remark20&#39;,document.gsheet.save_20)" onkeyup="AllowOnlyFloat(&#39;gsheet&#39;,&#39;grade20&#39;); MoveNext(event, document.gsheet.attendance21,document.gsheet.grade21);">
+	  <!--onKeyPress=" if(event.keyCode<46 || event.keyCode== 47 || event.keyCode > 57) event.returnValue=false;"-->
+         </td>
+ 
+      <td>  <select name="remark20" style="font-size:10px" tabindex="-1" onchange="validateGrade(document.gsheet.grade_percent20,document.gsheet.grade20,document.gsheet.save_20,document.gsheet.remark20)">
+          
+          		
+<option value="1">Passed</option>
+<option value="2">Failed</option>
+<option value="5">Incomplete</option>
+<option value="11">UD</option>
+<option value="12">OD</option>
+<option value="13">W</option>
+<option value="14">NC</option>
+<option value="15">FA</option>
+          
+        </select> </td>
+      <td width="6%" align="center"> <input type="checkbox" name="save_20" value="1" tabindex="-1" onclick="validateGrade(document.gsheet.grade_percent20,document.gsheet.grade20,document.gsheet.save_20,document.gsheet.remark20)"></td>
+    </tr>
+    
+    <tr class="nav" id="msg21" onmouseover="navRollOver(&#39;msg21&#39;, &#39;on&#39;)" onmouseout="navRollOver(&#39;msg21&#39;, &#39;off&#39;)">
+      <td><font size="1">22</font>
+      </td><td height="25"><font size="1">22-1190-438</font>
+	  <input type="hidden" name="cur_hist21" value="172040">
+      <input type="hidden" name="cur_index21" value="24873">
+      <input type="hidden" name="credit_earned21" value="3.0">      </td>
+      <td><font size="1">LACRO, ART LOUIE R. </font></td>
+      <td><font size="1">BSCS-DS
+        
+		
+        </font></td>
+
+
+      <td align="center"><font size="1">1</font></td>
+      
+      <td align="center">
+	  	
+        <input name="grade21" type="text" size="3" class="textbox" onfocus="navRollOver(&#39;msg21&#39;, &#39;on&#39;);style.backgroundColor=&#39;#D3EBFF&#39;" onblur="navRollOver(&#39;msg21&#39;, &#39;off&#39;);style.backgroundColor=&#39;white&#39;;updateCheckBox(document.gsheet.grade21, document.gsheet.save_21); UpdateRemarks(&#39;grade21&#39;,&#39;remark21&#39;,document.gsheet.save_21)" onkeyup="AllowOnlyFloat(&#39;gsheet&#39;,&#39;grade21&#39;); MoveNext(event, document.gsheet.attendance22,document.gsheet.grade22);">
+	  <!--onKeyPress=" if(event.keyCode<46 || event.keyCode== 47 || event.keyCode > 57) event.returnValue=false;"-->
+         </td>
+ 
+      <td>  <select name="remark21" style="font-size:10px" tabindex="-1" onchange="validateGrade(document.gsheet.grade_percent21,document.gsheet.grade21,document.gsheet.save_21,document.gsheet.remark21)">
+          
+          		
+<option value="1">Passed</option>
+<option value="2">Failed</option>
+<option value="5">Incomplete</option>
+<option value="11">UD</option>
+<option value="12">OD</option>
+<option value="13">W</option>
+<option value="14">NC</option>
+<option value="15">FA</option>
+          
+        </select> </td>
+      <td width="6%" align="center"> <input type="checkbox" name="save_21" value="1" tabindex="-1" onclick="validateGrade(document.gsheet.grade_percent21,document.gsheet.grade21,document.gsheet.save_21,document.gsheet.remark21)"></td>
+    </tr>
+    
+    <tr class="nav" id="msg22" onmouseover="navRollOver(&#39;msg22&#39;, &#39;on&#39;)" onmouseout="navRollOver(&#39;msg22&#39;, &#39;off&#39;)">
+      <td><font size="1">23</font>
+      </td><td height="25"><font size="1">23-1269-840</font>
+	  <input type="hidden" name="cur_hist22" value="172170">
+      <input type="hidden" name="cur_index22" value="24873">
+      <input type="hidden" name="credit_earned22" value="3.0">      </td>
+      <td><font size="1">LANCETA, ALEXANDER D. </font></td>
+      <td><font size="1">BSCS-DS
+        
+		
+        </font></td>
+
+
+      <td align="center"><font size="1">1</font></td>
+      
+      <td align="center">
+	  	
+        <input name="grade22" type="text" size="3" class="textbox" onfocus="navRollOver(&#39;msg22&#39;, &#39;on&#39;);style.backgroundColor=&#39;#D3EBFF&#39;" onblur="navRollOver(&#39;msg22&#39;, &#39;off&#39;);style.backgroundColor=&#39;white&#39;;updateCheckBox(document.gsheet.grade22, document.gsheet.save_22); UpdateRemarks(&#39;grade22&#39;,&#39;remark22&#39;,document.gsheet.save_22)" onkeyup="AllowOnlyFloat(&#39;gsheet&#39;,&#39;grade22&#39;); MoveNext(event, document.gsheet.attendance23,document.gsheet.grade23);">
+	  <!--onKeyPress=" if(event.keyCode<46 || event.keyCode== 47 || event.keyCode > 57) event.returnValue=false;"-->
+         </td>
+ 
+      <td>  <select name="remark22" style="font-size:10px" tabindex="-1" onchange="validateGrade(document.gsheet.grade_percent22,document.gsheet.grade22,document.gsheet.save_22,document.gsheet.remark22)">
+          
+          		
+<option value="1">Passed</option>
+<option value="2">Failed</option>
+<option value="5">Incomplete</option>
+<option value="11">UD</option>
+<option value="12">OD</option>
+<option value="13">W</option>
+<option value="14">NC</option>
+<option value="15">FA</option>
+          
+        </select> </td>
+      <td width="6%" align="center"> <input type="checkbox" name="save_22" value="1" tabindex="-1" onclick="validateGrade(document.gsheet.grade_percent22,document.gsheet.grade22,document.gsheet.save_22,document.gsheet.remark22)"></td>
+    </tr>
+    
+    <tr class="nav" id="msg23" onmouseover="navRollOver(&#39;msg23&#39;, &#39;on&#39;)" onmouseout="navRollOver(&#39;msg23&#39;, &#39;off&#39;)">
+      <td><font size="1">24</font>
+      </td><td height="25"><font size="1">25-2039-225</font>
+	  <input type="hidden" name="cur_hist23" value="172113">
+      <input type="hidden" name="cur_index23" value="24873">
+      <input type="hidden" name="credit_earned23" value="3.0">      </td>
+      <td><font size="1">LAXA, JUSTIN B. </font></td>
+      <td><font size="1">BSCS-DS
+        
+		
+        </font></td>
+
+
+      <td align="center"><font size="1">1</font></td>
+      
+      <td align="center">
+	  	
+        <input name="grade23" type="text" size="3" class="textbox" onfocus="navRollOver(&#39;msg23&#39;, &#39;on&#39;);style.backgroundColor=&#39;#D3EBFF&#39;" onblur="navRollOver(&#39;msg23&#39;, &#39;off&#39;);style.backgroundColor=&#39;white&#39;;updateCheckBox(document.gsheet.grade23, document.gsheet.save_23); UpdateRemarks(&#39;grade23&#39;,&#39;remark23&#39;,document.gsheet.save_23)" onkeyup="AllowOnlyFloat(&#39;gsheet&#39;,&#39;grade23&#39;); MoveNext(event, document.gsheet.attendance24,document.gsheet.grade24);">
+	  <!--onKeyPress=" if(event.keyCode<46 || event.keyCode== 47 || event.keyCode > 57) event.returnValue=false;"-->
+         </td>
+ 
+      <td>  <select name="remark23" style="font-size:10px" tabindex="-1" onchange="validateGrade(document.gsheet.grade_percent23,document.gsheet.grade23,document.gsheet.save_23,document.gsheet.remark23)">
+          
+          		
+<option value="1">Passed</option>
+<option value="2">Failed</option>
+<option value="5">Incomplete</option>
+<option value="11">UD</option>
+<option value="12">OD</option>
+<option value="13">W</option>
+<option value="14">NC</option>
+<option value="15">FA</option>
+          
+        </select> </td>
+      <td width="6%" align="center"> <input type="checkbox" name="save_23" value="1" tabindex="-1" onclick="validateGrade(document.gsheet.grade_percent23,document.gsheet.grade23,document.gsheet.save_23,document.gsheet.remark23)"></td>
+    </tr>
+    
+    <tr class="nav" id="msg24" onmouseover="navRollOver(&#39;msg24&#39;, &#39;on&#39;)" onmouseout="navRollOver(&#39;msg24&#39;, &#39;off&#39;)">
+      <td><font size="1">25</font>
+      </td><td height="25"><font size="1">25-1704-939</font>
+	  <input type="hidden" name="cur_hist24" value="172392">
+      <input type="hidden" name="cur_index24" value="24873">
+      <input type="hidden" name="credit_earned24" value="3.0">      </td>
+      <td><font size="1">LUMABAN, RISHAMAY FE R. </font></td>
+      <td><font size="1">BSCS-DS
+        
+		
+        </font></td>
+
+
+      <td align="center"><font size="1">1</font></td>
+      
+      <td align="center">
+	  	
+        <input name="grade24" type="text" size="3" class="textbox" onfocus="navRollOver(&#39;msg24&#39;, &#39;on&#39;);style.backgroundColor=&#39;#D3EBFF&#39;" onblur="navRollOver(&#39;msg24&#39;, &#39;off&#39;);style.backgroundColor=&#39;white&#39;;updateCheckBox(document.gsheet.grade24, document.gsheet.save_24); UpdateRemarks(&#39;grade24&#39;,&#39;remark24&#39;,document.gsheet.save_24)" onkeyup="AllowOnlyFloat(&#39;gsheet&#39;,&#39;grade24&#39;); MoveNext(event, document.gsheet.attendance25,document.gsheet.grade25);">
+	  <!--onKeyPress=" if(event.keyCode<46 || event.keyCode== 47 || event.keyCode > 57) event.returnValue=false;"-->
+         </td>
+ 
+      <td>  <select name="remark24" style="font-size:10px" tabindex="-1" onchange="validateGrade(document.gsheet.grade_percent24,document.gsheet.grade24,document.gsheet.save_24,document.gsheet.remark24)">
+          
+          		
+<option value="1">Passed</option>
+<option value="2">Failed</option>
+<option value="5">Incomplete</option>
+<option value="11">UD</option>
+<option value="12">OD</option>
+<option value="13">W</option>
+<option value="14">NC</option>
+<option value="15">FA</option>
+          
+        </select> </td>
+      <td width="6%" align="center"> <input type="checkbox" name="save_24" value="1" tabindex="-1" onclick="validateGrade(document.gsheet.grade_percent24,document.gsheet.grade24,document.gsheet.save_24,document.gsheet.remark24)"></td>
+    </tr>
+    
+    <tr class="nav" id="msg25" onmouseover="navRollOver(&#39;msg25&#39;, &#39;on&#39;)" onmouseout="navRollOver(&#39;msg25&#39;, &#39;off&#39;)">
+      <td><font size="1">26</font>
+      </td><td height="25"><font size="1">25-2386-709</font>
+	  <input type="hidden" name="cur_hist25" value="172430">
+      <input type="hidden" name="cur_index25" value="24873">
+      <input type="hidden" name="credit_earned25" value="3.0">      </td>
+      <td><font size="1">MAGBANUA, CYRUS MATHEW C. </font></td>
+      <td><font size="1">BSCS-DS
+        
+		
+        </font></td>
+
+
+      <td align="center"><font size="1">1</font></td>
+      
+      <td align="center">
+	  	
+        <input name="grade25" type="text" size="3" class="textbox" onfocus="navRollOver(&#39;msg25&#39;, &#39;on&#39;);style.backgroundColor=&#39;#D3EBFF&#39;" onblur="navRollOver(&#39;msg25&#39;, &#39;off&#39;);style.backgroundColor=&#39;white&#39;;updateCheckBox(document.gsheet.grade25, document.gsheet.save_25); UpdateRemarks(&#39;grade25&#39;,&#39;remark25&#39;,document.gsheet.save_25)" onkeyup="AllowOnlyFloat(&#39;gsheet&#39;,&#39;grade25&#39;); MoveNext(event, document.gsheet.attendance26,document.gsheet.grade26);">
+	  <!--onKeyPress=" if(event.keyCode<46 || event.keyCode== 47 || event.keyCode > 57) event.returnValue=false;"-->
+         </td>
+ 
+      <td>  <select name="remark25" style="font-size:10px" tabindex="-1" onchange="validateGrade(document.gsheet.grade_percent25,document.gsheet.grade25,document.gsheet.save_25,document.gsheet.remark25)">
+          
+          		
+<option value="1">Passed</option>
+<option value="2">Failed</option>
+<option value="5">Incomplete</option>
+<option value="11">UD</option>
+<option value="12">OD</option>
+<option value="13">W</option>
+<option value="14">NC</option>
+<option value="15">FA</option>
+          
+        </select> </td>
+      <td width="6%" align="center"> <input type="checkbox" name="save_25" value="1" tabindex="-1" onclick="validateGrade(document.gsheet.grade_percent25,document.gsheet.grade25,document.gsheet.save_25,document.gsheet.remark25)"></td>
+    </tr>
+    
+    <tr class="nav" id="msg26" onmouseover="navRollOver(&#39;msg26&#39;, &#39;on&#39;)" onmouseout="navRollOver(&#39;msg26&#39;, &#39;off&#39;)">
+      <td><font size="1">27</font>
+      </td><td height="25"><font size="1">25-2295-798</font>
+	  <input type="hidden" name="cur_hist26" value="172307">
+      <input type="hidden" name="cur_index26" value="24873">
+      <input type="hidden" name="credit_earned26" value="3.0">      </td>
+      <td><font size="1">MALANO, JAZAN KIERR J. </font></td>
+      <td><font size="1">BSCS-DS
+        
+		
+        </font></td>
+
+
+      <td align="center"><font size="1">2</font></td>
+      
+      <td align="center">
+	  	
+        <input name="grade26" type="text" size="3" class="textbox" onfocus="navRollOver(&#39;msg26&#39;, &#39;on&#39;);style.backgroundColor=&#39;#D3EBFF&#39;" onblur="navRollOver(&#39;msg26&#39;, &#39;off&#39;);style.backgroundColor=&#39;white&#39;;updateCheckBox(document.gsheet.grade26, document.gsheet.save_26); UpdateRemarks(&#39;grade26&#39;,&#39;remark26&#39;,document.gsheet.save_26)" onkeyup="AllowOnlyFloat(&#39;gsheet&#39;,&#39;grade26&#39;); MoveNext(event, document.gsheet.attendance27,document.gsheet.grade27);">
+	  <!--onKeyPress=" if(event.keyCode<46 || event.keyCode== 47 || event.keyCode > 57) event.returnValue=false;"-->
+         </td>
+ 
+      <td>  <select name="remark26" style="font-size:10px" tabindex="-1" onchange="validateGrade(document.gsheet.grade_percent26,document.gsheet.grade26,document.gsheet.save_26,document.gsheet.remark26)">
+          
+          		
+<option value="1">Passed</option>
+<option value="2">Failed</option>
+<option value="5">Incomplete</option>
+<option value="11">UD</option>
+<option value="12">OD</option>
+<option value="13">W</option>
+<option value="14">NC</option>
+<option value="15">FA</option>
+          
+        </select> </td>
+      <td width="6%" align="center"> <input type="checkbox" name="save_26" value="1" tabindex="-1" onclick="validateGrade(document.gsheet.grade_percent26,document.gsheet.grade26,document.gsheet.save_26,document.gsheet.remark26)"></td>
+    </tr>
+    
+    <tr class="nav" id="msg27" onmouseover="navRollOver(&#39;msg27&#39;, &#39;on&#39;)" onmouseout="navRollOver(&#39;msg27&#39;, &#39;off&#39;)">
+      <td><font size="1">28</font>
+      </td><td height="25"><font size="1">23-1930-317</font>
+	  <input type="hidden" name="cur_hist27" value="173739">
+      <input type="hidden" name="cur_index27" value="24873">
+      <input type="hidden" name="credit_earned27" value="3.0">      </td>
+      <td><font size="1">MANAYSAY, CLIVE E. </font></td>
+      <td><font size="1">BSCS-DS
+        
+		
+        </font></td>
+
+
+      <td align="center"><font size="1">1</font></td>
+      
+      <td align="center">
+	  	
+        <input name="grade27" type="text" size="3" class="textbox" onfocus="navRollOver(&#39;msg27&#39;, &#39;on&#39;);style.backgroundColor=&#39;#D3EBFF&#39;" onblur="navRollOver(&#39;msg27&#39;, &#39;off&#39;);style.backgroundColor=&#39;white&#39;;updateCheckBox(document.gsheet.grade27, document.gsheet.save_27); UpdateRemarks(&#39;grade27&#39;,&#39;remark27&#39;,document.gsheet.save_27)" onkeyup="AllowOnlyFloat(&#39;gsheet&#39;,&#39;grade27&#39;); MoveNext(event, document.gsheet.attendance28,document.gsheet.grade28);">
+	  <!--onKeyPress=" if(event.keyCode<46 || event.keyCode== 47 || event.keyCode > 57) event.returnValue=false;"-->
+         </td>
+ 
+      <td>  <select name="remark27" style="font-size:10px" tabindex="-1" onchange="validateGrade(document.gsheet.grade_percent27,document.gsheet.grade27,document.gsheet.save_27,document.gsheet.remark27)">
+          
+          		
+<option value="1">Passed</option>
+<option value="2">Failed</option>
+<option value="5">Incomplete</option>
+<option value="11">UD</option>
+<option value="12">OD</option>
+<option value="13">W</option>
+<option value="14">NC</option>
+<option value="15">FA</option>
+          
+        </select> </td>
+      <td width="6%" align="center"> <input type="checkbox" name="save_27" value="1" tabindex="-1" onclick="validateGrade(document.gsheet.grade_percent27,document.gsheet.grade27,document.gsheet.save_27,document.gsheet.remark27)"></td>
+    </tr>
+    
+    <tr class="nav" id="msg28" onmouseover="navRollOver(&#39;msg28&#39;, &#39;on&#39;)" onmouseout="navRollOver(&#39;msg28&#39;, &#39;off&#39;)">
+      <td><font size="1">29</font>
+      </td><td height="25"><font size="1">25-2619-162</font>
+	  <input type="hidden" name="cur_hist28" value="174886">
+      <input type="hidden" name="cur_index28" value="24873">
+      <input type="hidden" name="credit_earned28" value="3.0">      </td>
+      <td><font size="1">MORANTTE, CYMON KURT M. </font></td>
+      <td><font size="1">BSCS-DS
+        
+		
+        </font></td>
+
+
+      <td align="center"><font size="1">1</font></td>
+      
+      <td align="center">
+	  	
+        <input name="grade28" type="text" size="3" class="textbox" onfocus="navRollOver(&#39;msg28&#39;, &#39;on&#39;);style.backgroundColor=&#39;#D3EBFF&#39;" onblur="navRollOver(&#39;msg28&#39;, &#39;off&#39;);style.backgroundColor=&#39;white&#39;;updateCheckBox(document.gsheet.grade28, document.gsheet.save_28); UpdateRemarks(&#39;grade28&#39;,&#39;remark28&#39;,document.gsheet.save_28)" onkeyup="AllowOnlyFloat(&#39;gsheet&#39;,&#39;grade28&#39;); MoveNext(event, document.gsheet.attendance29,document.gsheet.grade29);">
+	  <!--onKeyPress=" if(event.keyCode<46 || event.keyCode== 47 || event.keyCode > 57) event.returnValue=false;"-->
+         </td>
+ 
+      <td>  <select name="remark28" style="font-size:10px" tabindex="-1" onchange="validateGrade(document.gsheet.grade_percent28,document.gsheet.grade28,document.gsheet.save_28,document.gsheet.remark28)">
+          
+          		
+<option value="1">Passed</option>
+<option value="2">Failed</option>
+<option value="5">Incomplete</option>
+<option value="11">UD</option>
+<option value="12">OD</option>
+<option value="13">W</option>
+<option value="14">NC</option>
+<option value="15">FA</option>
+          
+        </select> </td>
+      <td width="6%" align="center"> <input type="checkbox" name="save_28" value="1" tabindex="-1" onclick="validateGrade(document.gsheet.grade_percent28,document.gsheet.grade28,document.gsheet.save_28,document.gsheet.remark28)"></td>
+    </tr>
+    
+    <tr class="nav" id="msg29" onmouseover="navRollOver(&#39;msg29&#39;, &#39;on&#39;)" onmouseout="navRollOver(&#39;msg29&#39;, &#39;off&#39;)">
+      <td><font size="1">30</font>
+      </td><td height="25"><font size="1">13-0629-509</font>
+	  <input type="hidden" name="cur_hist29" value="172886">
+      <input type="hidden" name="cur_index29" value="24873">
+      <input type="hidden" name="credit_earned29" value="3.0">      </td>
+      <td><font size="1">PEÑALOSA, TRAVIS LLOYD B. </font></td>
+      <td><font size="1">BSCS-DS
+        
+		
+        </font></td>
+
+
+      <td align="center"><font size="1">1</font></td>
+      
+      <td align="center">
+	  	
+        <input name="grade29" type="text" size="3" class="textbox" onfocus="navRollOver(&#39;msg29&#39;, &#39;on&#39;);style.backgroundColor=&#39;#D3EBFF&#39;" onblur="navRollOver(&#39;msg29&#39;, &#39;off&#39;);style.backgroundColor=&#39;white&#39;;updateCheckBox(document.gsheet.grade29, document.gsheet.save_29); UpdateRemarks(&#39;grade29&#39;,&#39;remark29&#39;,document.gsheet.save_29)" onkeyup="AllowOnlyFloat(&#39;gsheet&#39;,&#39;grade29&#39;); MoveNext(event, document.gsheet.attendance30,document.gsheet.grade30);">
+	  <!--onKeyPress=" if(event.keyCode<46 || event.keyCode== 47 || event.keyCode > 57) event.returnValue=false;"-->
+         </td>
+ 
+      <td>  <select name="remark29" style="font-size:10px" tabindex="-1" onchange="validateGrade(document.gsheet.grade_percent29,document.gsheet.grade29,document.gsheet.save_29,document.gsheet.remark29)">
+          
+          		
+<option value="1">Passed</option>
+<option value="2">Failed</option>
+<option value="5">Incomplete</option>
+<option value="11">UD</option>
+<option value="12">OD</option>
+<option value="13">W</option>
+<option value="14">NC</option>
+<option value="15">FA</option>
+          
+        </select> </td>
+      <td width="6%" align="center"> <input type="checkbox" name="save_29" value="1" tabindex="-1" onclick="validateGrade(document.gsheet.grade_percent29,document.gsheet.grade29,document.gsheet.save_29,document.gsheet.remark29)"></td>
+    </tr>
+    
+    <tr class="nav" id="msg30" onmouseover="navRollOver(&#39;msg30&#39;, &#39;on&#39;)" onmouseout="navRollOver(&#39;msg30&#39;, &#39;off&#39;)">
+      <td><font size="1">31</font>
+      </td><td height="25"><font size="1">23-0322-603</font>
+	  <input type="hidden" name="cur_hist30" value="172383">
+      <input type="hidden" name="cur_index30" value="24873">
+      <input type="hidden" name="credit_earned30" value="3.0">      </td>
+      <td><font size="1">PERMISON, GIAN CARLO J. </font></td>
+      <td><font size="1">BSCS-DS
+        
+		
+        </font></td>
+
+
+      <td align="center"><font size="1">1</font></td>
+      
+      <td align="center">
+	  	
+        <input name="grade30" type="text" size="3" class="textbox" onfocus="navRollOver(&#39;msg30&#39;, &#39;on&#39;);style.backgroundColor=&#39;#D3EBFF&#39;" onblur="navRollOver(&#39;msg30&#39;, &#39;off&#39;);style.backgroundColor=&#39;white&#39;;updateCheckBox(document.gsheet.grade30, document.gsheet.save_30); UpdateRemarks(&#39;grade30&#39;,&#39;remark30&#39;,document.gsheet.save_30)" onkeyup="AllowOnlyFloat(&#39;gsheet&#39;,&#39;grade30&#39;); MoveNext(event, document.gsheet.attendance31,document.gsheet.grade31);">
+	  <!--onKeyPress=" if(event.keyCode<46 || event.keyCode== 47 || event.keyCode > 57) event.returnValue=false;"-->
+         </td>
+ 
+      <td>  <select name="remark30" style="font-size:10px" tabindex="-1" onchange="validateGrade(document.gsheet.grade_percent30,document.gsheet.grade30,document.gsheet.save_30,document.gsheet.remark30)">
+          
+          		
+<option value="1">Passed</option>
+<option value="2">Failed</option>
+<option value="5">Incomplete</option>
+<option value="11">UD</option>
+<option value="12">OD</option>
+<option value="13">W</option>
+<option value="14">NC</option>
+<option value="15">FA</option>
+          
+        </select> </td>
+      <td width="6%" align="center"> <input type="checkbox" name="save_30" value="1" tabindex="-1" onclick="validateGrade(document.gsheet.grade_percent30,document.gsheet.grade30,document.gsheet.save_30,document.gsheet.remark30)"></td>
+    </tr>
+    
+    <tr class="nav" id="msg31" onmouseover="navRollOver(&#39;msg31&#39;, &#39;on&#39;)" onmouseout="navRollOver(&#39;msg31&#39;, &#39;off&#39;)">
+      <td><font size="1">32</font>
+      </td><td height="25"><font size="1">23-0257-806</font>
+	  <input type="hidden" name="cur_hist31" value="172382">
+      <input type="hidden" name="cur_index31" value="24873">
+      <input type="hidden" name="credit_earned31" value="3.0">      </td>
+      <td><font size="1">QUIAMBAO, DUSTIN CLARK S. </font></td>
+      <td><font size="1">BSCS-DS
+        
+		
+        </font></td>
+
+
+      <td align="center"><font size="1">1</font></td>
+      
+      <td align="center">
+	  	
+        <input name="grade31" type="text" size="3" class="textbox" onfocus="navRollOver(&#39;msg31&#39;, &#39;on&#39;);style.backgroundColor=&#39;#D3EBFF&#39;" onblur="navRollOver(&#39;msg31&#39;, &#39;off&#39;);style.backgroundColor=&#39;white&#39;;updateCheckBox(document.gsheet.grade31, document.gsheet.save_31); UpdateRemarks(&#39;grade31&#39;,&#39;remark31&#39;,document.gsheet.save_31)" onkeyup="AllowOnlyFloat(&#39;gsheet&#39;,&#39;grade31&#39;); MoveNext(event, document.gsheet.attendance32,document.gsheet.grade32);">
+	  <!--onKeyPress=" if(event.keyCode<46 || event.keyCode== 47 || event.keyCode > 57) event.returnValue=false;"-->
+         </td>
+ 
+      <td>  <select name="remark31" style="font-size:10px" tabindex="-1" onchange="validateGrade(document.gsheet.grade_percent31,document.gsheet.grade31,document.gsheet.save_31,document.gsheet.remark31)">
+          
+          		
+<option value="1">Passed</option>
+<option value="2">Failed</option>
+<option value="5">Incomplete</option>
+<option value="11">UD</option>
+<option value="12">OD</option>
+<option value="13">W</option>
+<option value="14">NC</option>
+<option value="15">FA</option>
+          
+        </select> </td>
+      <td width="6%" align="center"> <input type="checkbox" name="save_31" value="1" tabindex="-1" onclick="validateGrade(document.gsheet.grade_percent31,document.gsheet.grade31,document.gsheet.save_31,document.gsheet.remark31)"></td>
+    </tr>
+    
+    <tr class="nav" id="msg32" onmouseover="navRollOver(&#39;msg32&#39;, &#39;on&#39;)" onmouseout="navRollOver(&#39;msg32&#39;, &#39;off&#39;)">
+      <td><font size="1">33</font>
+      </td><td height="25"><font size="1">22-1607-953</font>
+	  <input type="hidden" name="cur_hist32" value="174204">
+      <input type="hidden" name="cur_index32" value="24873">
+      <input type="hidden" name="credit_earned32" value="3.0">      </td>
+      <td><font size="1">SANCHEZ, ALDRICH T. </font></td>
+      <td><font size="1">BSCS-DS
+        
+		
+        </font></td>
+
+
+      <td align="center"><font size="1">1</font></td>
+      
+      <td align="center">
+	  	
+        <input name="grade32" type="text" size="3" class="textbox" onfocus="navRollOver(&#39;msg32&#39;, &#39;on&#39;);style.backgroundColor=&#39;#D3EBFF&#39;" onblur="navRollOver(&#39;msg32&#39;, &#39;off&#39;);style.backgroundColor=&#39;white&#39;;updateCheckBox(document.gsheet.grade32, document.gsheet.save_32); UpdateRemarks(&#39;grade32&#39;,&#39;remark32&#39;,document.gsheet.save_32)" onkeyup="AllowOnlyFloat(&#39;gsheet&#39;,&#39;grade32&#39;); MoveNext(event, document.gsheet.attendance33,document.gsheet.grade33);">
+	  <!--onKeyPress=" if(event.keyCode<46 || event.keyCode== 47 || event.keyCode > 57) event.returnValue=false;"-->
+         </td>
+ 
+      <td>  <select name="remark32" style="font-size:10px" tabindex="-1" onchange="validateGrade(document.gsheet.grade_percent32,document.gsheet.grade32,document.gsheet.save_32,document.gsheet.remark32)">
+          
+          		
+<option value="1">Passed</option>
+<option value="2">Failed</option>
+<option value="5">Incomplete</option>
+<option value="11">UD</option>
+<option value="12">OD</option>
+<option value="13">W</option>
+<option value="14">NC</option>
+<option value="15">FA</option>
+          
+        </select> </td>
+      <td width="6%" align="center"> <input type="checkbox" name="save_32" value="1" tabindex="-1" onclick="validateGrade(document.gsheet.grade_percent32,document.gsheet.grade32,document.gsheet.save_32,document.gsheet.remark32)"></td>
+    </tr>
+    
+    <tr class="nav" id="msg33" onmouseover="navRollOver(&#39;msg33&#39;, &#39;on&#39;)" onmouseout="navRollOver(&#39;msg33&#39;, &#39;off&#39;)">
+      <td><font size="1">34</font>
+      </td><td height="25"><font size="1">23-2038-833</font>
+	  <input type="hidden" name="cur_hist33" value="173363">
+      <input type="hidden" name="cur_index33" value="24873">
+      <input type="hidden" name="credit_earned33" value="3.0">      </td>
+      <td><font size="1">SANTILLAN, MARVIN REY M. </font></td>
+      <td><font size="1">BSCS-DS
+        
+		
+        </font></td>
+
+
+      <td align="center"><font size="1">1</font></td>
+      
+      <td align="center">
+	  	
+        <input name="grade33" type="text" size="3" class="textbox" onfocus="navRollOver(&#39;msg33&#39;, &#39;on&#39;);style.backgroundColor=&#39;#D3EBFF&#39;" onblur="navRollOver(&#39;msg33&#39;, &#39;off&#39;);style.backgroundColor=&#39;white&#39;;updateCheckBox(document.gsheet.grade33, document.gsheet.save_33); UpdateRemarks(&#39;grade33&#39;,&#39;remark33&#39;,document.gsheet.save_33)" onkeyup="AllowOnlyFloat(&#39;gsheet&#39;,&#39;grade33&#39;); MoveNext(event, document.gsheet.attendance34,document.gsheet.grade34);">
+	  <!--onKeyPress=" if(event.keyCode<46 || event.keyCode== 47 || event.keyCode > 57) event.returnValue=false;"-->
+         </td>
+ 
+      <td>  <select name="remark33" style="font-size:10px" tabindex="-1" onchange="validateGrade(document.gsheet.grade_percent33,document.gsheet.grade33,document.gsheet.save_33,document.gsheet.remark33)">
+          
+          		
+<option value="1">Passed</option>
+<option value="2">Failed</option>
+<option value="5">Incomplete</option>
+<option value="11">UD</option>
+<option value="12">OD</option>
+<option value="13">W</option>
+<option value="14">NC</option>
+<option value="15">FA</option>
+          
+        </select> </td>
+      <td width="6%" align="center"> <input type="checkbox" name="save_33" value="1" tabindex="-1" onclick="validateGrade(document.gsheet.grade_percent33,document.gsheet.grade33,document.gsheet.save_33,document.gsheet.remark33)"></td>
+    </tr>
+    
+    <tr class="nav" id="msg34" onmouseover="navRollOver(&#39;msg34&#39;, &#39;on&#39;)" onmouseout="navRollOver(&#39;msg34&#39;, &#39;off&#39;)">
+      <td><font size="1">35</font>
+      </td><td height="25"><font size="1">23-1059-589</font>
+	  <input type="hidden" name="cur_hist34" value="172688">
+      <input type="hidden" name="cur_index34" value="24873">
+      <input type="hidden" name="credit_earned34" value="3.0">      </td>
+      <td><font size="1">SULADAY, CHARLES DANIEL P. </font></td>
+      <td><font size="1">BSCS-DS
+        
+		
+        </font></td>
+
+
+      <td align="center"><font size="1">1</font></td>
+      
+      <td align="center">
+	  	
+        <input name="grade34" type="text" size="3" class="textbox" onfocus="navRollOver(&#39;msg34&#39;, &#39;on&#39;);style.backgroundColor=&#39;#D3EBFF&#39;" onblur="navRollOver(&#39;msg34&#39;, &#39;off&#39;);style.backgroundColor=&#39;white&#39;;updateCheckBox(document.gsheet.grade34, document.gsheet.save_34); UpdateRemarks(&#39;grade34&#39;,&#39;remark34&#39;,document.gsheet.save_34)" onkeyup="AllowOnlyFloat(&#39;gsheet&#39;,&#39;grade34&#39;); MoveNext(event, document.gsheet.attendance35,document.gsheet.grade35);">
+	  <!--onKeyPress=" if(event.keyCode<46 || event.keyCode== 47 || event.keyCode > 57) event.returnValue=false;"-->
+         </td>
+ 
+      <td>  <select name="remark34" style="font-size:10px" tabindex="-1" onchange="validateGrade(document.gsheet.grade_percent34,document.gsheet.grade34,document.gsheet.save_34,document.gsheet.remark34)">
+          
+          		
+<option value="1">Passed</option>
+<option value="2">Failed</option>
+<option value="5">Incomplete</option>
+<option value="11">UD</option>
+<option value="12">OD</option>
+<option value="13">W</option>
+<option value="14">NC</option>
+<option value="15">FA</option>
+          
+        </select> </td>
+      <td width="6%" align="center"> <input type="checkbox" name="save_34" value="1" tabindex="-1" onclick="validateGrade(document.gsheet.grade_percent34,document.gsheet.grade34,document.gsheet.save_34,document.gsheet.remark34)"></td>
+    </tr>
+    
+    <tr class="nav" id="msg35" onmouseover="navRollOver(&#39;msg35&#39;, &#39;on&#39;)" onmouseout="navRollOver(&#39;msg35&#39;, &#39;off&#39;)">
+      <td><font size="1">36</font>
+      </td><td height="25"><font size="1">25-2407-228</font>
+	  <input type="hidden" name="cur_hist35" value="172666">
+      <input type="hidden" name="cur_index35" value="24873">
+      <input type="hidden" name="credit_earned35" value="3.0">      </td>
+      <td><font size="1">TINSAY, JOHN CLEO T. </font></td>
+      <td><font size="1">BSCS-DS
+        
+		
+        </font></td>
+
+
+      <td align="center"><font size="1">1</font></td>
+      
+      <td align="center">
+	  	
+        <input name="grade35" type="text" size="3" class="textbox" onfocus="navRollOver(&#39;msg35&#39;, &#39;on&#39;);style.backgroundColor=&#39;#D3EBFF&#39;" onblur="navRollOver(&#39;msg35&#39;, &#39;off&#39;);style.backgroundColor=&#39;white&#39;;updateCheckBox(document.gsheet.grade35, document.gsheet.save_35); UpdateRemarks(&#39;grade35&#39;,&#39;remark35&#39;,document.gsheet.save_35)" onkeyup="AllowOnlyFloat(&#39;gsheet&#39;,&#39;grade35&#39;); MoveNext(event, document.gsheet.attendance36,document.gsheet.grade36);">
+	  <!--onKeyPress=" if(event.keyCode<46 || event.keyCode== 47 || event.keyCode > 57) event.returnValue=false;"-->
+         </td>
+ 
+      <td>  <select name="remark35" style="font-size:10px" tabindex="-1" onchange="validateGrade(document.gsheet.grade_percent35,document.gsheet.grade35,document.gsheet.save_35,document.gsheet.remark35)">
+          
+          		
+<option value="1">Passed</option>
+<option value="2">Failed</option>
+<option value="5">Incomplete</option>
+<option value="11">UD</option>
+<option value="12">OD</option>
+<option value="13">W</option>
+<option value="14">NC</option>
+<option value="15">FA</option>
+          
+        </select> </td>
+      <td width="6%" align="center"> <input type="checkbox" name="save_35" value="1" tabindex="-1" onclick="validateGrade(document.gsheet.grade_percent35,document.gsheet.grade35,document.gsheet.save_35,document.gsheet.remark35)"></td>
+    </tr>
+    
+    <tr class="nav" id="msg36" onmouseover="navRollOver(&#39;msg36&#39;, &#39;on&#39;)" onmouseout="navRollOver(&#39;msg36&#39;, &#39;off&#39;)">
+      <td><font size="1">37</font>
+      </td><td height="25"><font size="1">23-0053-635</font>
+	  <input type="hidden" name="cur_hist36" value="171977">
+      <input type="hidden" name="cur_index36" value="24873">
+      <input type="hidden" name="credit_earned36" value="3.0">      </td>
+      <td><font size="1">URBINO, CARLOS MIGUEL M. </font></td>
+      <td><font size="1">BSCS-DS
+        
+		
+        </font></td>
+
+
+      <td align="center"><font size="1">1</font></td>
+      
+      <td align="center">
+	  	
+        <input name="grade36" type="text" size="3" class="textbox" onfocus="navRollOver(&#39;msg36&#39;, &#39;on&#39;);style.backgroundColor=&#39;#D3EBFF&#39;" onblur="navRollOver(&#39;msg36&#39;, &#39;off&#39;);style.backgroundColor=&#39;white&#39;;updateCheckBox(document.gsheet.grade36, document.gsheet.save_36); UpdateRemarks(&#39;grade36&#39;,&#39;remark36&#39;,document.gsheet.save_36)" onkeyup="AllowOnlyFloat(&#39;gsheet&#39;,&#39;grade36&#39;); MoveNext(event, document.gsheet.attendance37,document.gsheet.grade37);">
+	  <!--onKeyPress=" if(event.keyCode<46 || event.keyCode== 47 || event.keyCode > 57) event.returnValue=false;"-->
+         </td>
+ 
+      <td>  <select name="remark36" style="font-size:10px" tabindex="-1" onchange="validateGrade(document.gsheet.grade_percent36,document.gsheet.grade36,document.gsheet.save_36,document.gsheet.remark36)">
+          
+          		
+<option value="1">Passed</option>
+<option value="2">Failed</option>
+<option value="5">Incomplete</option>
+<option value="11">UD</option>
+<option value="12">OD</option>
+<option value="13">W</option>
+<option value="14">NC</option>
+<option value="15">FA</option>
+          
+        </select> </td>
+      <td width="6%" align="center"> <input type="checkbox" name="save_36" value="1" tabindex="-1" onclick="validateGrade(document.gsheet.grade_percent36,document.gsheet.grade36,document.gsheet.save_36,document.gsheet.remark36)"></td>
+    </tr>
+    
+    <tr class="nav" id="msg37" onmouseover="navRollOver(&#39;msg37&#39;, &#39;on&#39;)" onmouseout="navRollOver(&#39;msg37&#39;, &#39;off&#39;)">
+      <td><font size="1">38</font>
+      </td><td height="25"><font size="1">23-0818-605</font>
+	  <input type="hidden" name="cur_hist37" value="173078">
+      <input type="hidden" name="cur_index37" value="24873">
+      <input type="hidden" name="credit_earned37" value="3.0">      </td>
+      <td><font size="1">VALENCIA, MARICAR C. </font></td>
+      <td><font size="1">BSCS-DS
+        
+		
+        </font></td>
+
+
+      <td align="center"><font size="1">1</font></td>
+      
+      <td align="center">
+	  	
+        <input name="grade37" type="text" size="3" class="textbox" onfocus="navRollOver(&#39;msg37&#39;, &#39;on&#39;);style.backgroundColor=&#39;#D3EBFF&#39;" onblur="navRollOver(&#39;msg37&#39;, &#39;off&#39;);style.backgroundColor=&#39;white&#39;;updateCheckBox(document.gsheet.grade37, document.gsheet.save_37); UpdateRemarks(&#39;grade37&#39;,&#39;remark37&#39;,document.gsheet.save_37)" onkeyup="AllowOnlyFloat(&#39;gsheet&#39;,&#39;grade37&#39;); MoveNext(event, document.gsheet.attendance38,document.gsheet.grade38);">
+	  <!--onKeyPress=" if(event.keyCode<46 || event.keyCode== 47 || event.keyCode > 57) event.returnValue=false;"-->
+         </td>
+ 
+      <td>  <select name="remark37" style="font-size:10px" tabindex="-1" onchange="validateGrade(document.gsheet.grade_percent37,document.gsheet.grade37,document.gsheet.save_37,document.gsheet.remark37)">
+          
+          		
+<option value="1">Passed</option>
+<option value="2">Failed</option>
+<option value="5">Incomplete</option>
+<option value="11">UD</option>
+<option value="12">OD</option>
+<option value="13">W</option>
+<option value="14">NC</option>
+<option value="15">FA</option>
+          
+        </select> </td>
+      <td width="6%" align="center"> <input type="checkbox" name="save_37" value="1" tabindex="-1" onclick="validateGrade(document.gsheet.grade_percent37,document.gsheet.grade37,document.gsheet.save_37,document.gsheet.remark37)"></td>
+    </tr>
+    
+    <tr class="nav" id="msg38" onmouseover="navRollOver(&#39;msg38&#39;, &#39;on&#39;)" onmouseout="navRollOver(&#39;msg38&#39;, &#39;off&#39;)">
+      <td><font size="1">39</font>
+      </td><td height="25"><font size="1">25-0775-853</font>
+	  <input type="hidden" name="cur_hist38" value="172118">
+      <input type="hidden" name="cur_index38" value="24873">
+      <input type="hidden" name="credit_earned38" value="3.0">      </td>
+      <td><font size="1">VILLAFLORES, JOELLEN T. </font></td>
+      <td><font size="1">BSCS-DS
+        
+		
+        </font></td>
+
+
+      <td align="center"><font size="1">1</font></td>
+      
+      <td align="center">
+	  	
+        <input name="grade38" type="text" size="3" class="textbox" onfocus="navRollOver(&#39;msg38&#39;, &#39;on&#39;);style.backgroundColor=&#39;#D3EBFF&#39;" onblur="navRollOver(&#39;msg38&#39;, &#39;off&#39;);style.backgroundColor=&#39;white&#39;;updateCheckBox(document.gsheet.grade38, document.gsheet.save_38); UpdateRemarks(&#39;grade38&#39;,&#39;remark38&#39;,document.gsheet.save_38)" onkeyup="AllowOnlyFloat(&#39;gsheet&#39;,&#39;grade38&#39;); MoveNext(event, document.gsheet.attendance39,document.gsheet.grade39);">
+	  <!--onKeyPress=" if(event.keyCode<46 || event.keyCode== 47 || event.keyCode > 57) event.returnValue=false;"-->
+         </td>
+ 
+      <td>  <select name="remark38" style="font-size:10px" tabindex="-1" onchange="validateGrade(document.gsheet.grade_percent38,document.gsheet.grade38,document.gsheet.save_38,document.gsheet.remark38)">
+          
+          		
+<option value="1">Passed</option>
+<option value="2">Failed</option>
+<option value="5">Incomplete</option>
+<option value="11">UD</option>
+<option value="12">OD</option>
+<option value="13">W</option>
+<option value="14">NC</option>
+<option value="15">FA</option>
+          
+        </select> </td>
+      <td width="6%" align="center"> <input type="checkbox" name="save_38" value="1" tabindex="-1" onclick="validateGrade(document.gsheet.grade_percent38,document.gsheet.grade38,document.gsheet.save_38,document.gsheet.remark38)"></td>
+    </tr>
+    
+    <tr class="nav" id="msg39" onmouseover="navRollOver(&#39;msg39&#39;, &#39;on&#39;)" onmouseout="navRollOver(&#39;msg39&#39;, &#39;off&#39;)">
+      <td><font size="1">40</font>
+      </td><td height="25"><font size="1">23-0380-161</font>
+	  <input type="hidden" name="cur_hist39" value="174257">
+      <input type="hidden" name="cur_index39" value="24873">
+      <input type="hidden" name="credit_earned39" value="3.0">      </td>
+      <td><font size="1">VILLENA, JOHN KENNETH M. </font></td>
+      <td><font size="1">BSCS-DS
+        
+		
+        </font></td>
+
+
+      <td align="center"><font size="1">1</font></td>
+      
+      <td align="center">
+	  	
+        <input name="grade39" type="text" size="3" class="textbox" onfocus="navRollOver(&#39;msg39&#39;, &#39;on&#39;);style.backgroundColor=&#39;#D3EBFF&#39;" onblur="navRollOver(&#39;msg39&#39;, &#39;off&#39;);style.backgroundColor=&#39;white&#39;;updateCheckBox(document.gsheet.grade39, document.gsheet.save_39); UpdateRemarks(&#39;grade39&#39;,&#39;remark39&#39;,document.gsheet.save_39)" onkeyup="AllowOnlyFloat(&#39;gsheet&#39;,&#39;grade39&#39;); MoveNext(event, document.gsheet.attendance40,document.gsheet.grade40);">
+	  <!--onKeyPress=" if(event.keyCode<46 || event.keyCode== 47 || event.keyCode > 57) event.returnValue=false;"-->
+         </td>
+ 
+      <td>  <select name="remark39" style="font-size:10px" tabindex="-1" onchange="validateGrade(document.gsheet.grade_percent39,document.gsheet.grade39,document.gsheet.save_39,document.gsheet.remark39)">
+          
+          		
+<option value="1">Passed</option>
+<option value="2">Failed</option>
+<option value="5">Incomplete</option>
+<option value="11">UD</option>
+<option value="12">OD</option>
+<option value="13">W</option>
+<option value="14">NC</option>
+<option value="15">FA</option>
+          
+        </select> </td>
+      <td width="6%" align="center"> <input type="checkbox" name="save_39" value="1" tabindex="-1" onclick="validateGrade(document.gsheet.grade_percent39,document.gsheet.grade39,document.gsheet.save_39,document.gsheet.remark39)"></td>
+    </tr>
+    
+    <tr class="nav" id="msg40" onmouseover="navRollOver(&#39;msg40&#39;, &#39;on&#39;)" onmouseout="navRollOver(&#39;msg40&#39;, &#39;off&#39;)">
+      <td><font size="1">41</font>
+      </td><td height="25"><font size="1">25-1823-197</font>
+	  <input type="hidden" name="cur_hist40" value="173076">
+      <input type="hidden" name="cur_index40" value="24873">
+      <input type="hidden" name="credit_earned40" value="3.0">      </td>
+      <td><font size="1">VOCAL, REIN ALEXANDER A. </font></td>
+      <td><font size="1">BSCS-DS
+        
+		
+        </font></td>
+
+
+      <td align="center"><font size="1">1</font></td>
+      
+      <td align="center">
+	  	
+        <input name="grade40" type="text" size="3" class="textbox" onfocus="navRollOver(&#39;msg40&#39;, &#39;on&#39;);style.backgroundColor=&#39;#D3EBFF&#39;" onblur="navRollOver(&#39;msg40&#39;, &#39;off&#39;);style.backgroundColor=&#39;white&#39;;updateCheckBox(document.gsheet.grade40, document.gsheet.save_40); UpdateRemarks(&#39;grade40&#39;,&#39;remark40&#39;,document.gsheet.save_40)" onkeyup="AllowOnlyFloat(&#39;gsheet&#39;,&#39;grade40&#39;); MoveNext(event, document.gsheet.attendance41,document.gsheet.grade41);">
+	  <!--onKeyPress=" if(event.keyCode<46 || event.keyCode== 47 || event.keyCode > 57) event.returnValue=false;"-->
+         </td>
+ 
+      <td>  <select name="remark40" style="font-size:10px" tabindex="-1" onchange="validateGrade(document.gsheet.grade_percent40,document.gsheet.grade40,document.gsheet.save_40,document.gsheet.remark40)">
+          
+          		
+<option value="1">Passed</option>
+<option value="2">Failed</option>
+<option value="5">Incomplete</option>
+<option value="11">UD</option>
+<option value="12">OD</option>
+<option value="13">W</option>
+<option value="14">NC</option>
+<option value="15">FA</option>
+          
+        </select> </td>
+      <td width="6%" align="center"> <input type="checkbox" name="save_40" value="1" tabindex="-1" onclick="validateGrade(document.gsheet.grade_percent40,document.gsheet.grade40,document.gsheet.save_40,document.gsheet.remark40)"></td>
+    </tr>
+    
+  </tbody></table>
+<input type="hidden" name="disp_count_gs_pending" value="41">
+  <table width="100%" border="0" cellspacing="0" cellpadding="0" bgcolor="#FFFFFF">
+    <tbody><tr>
+      <td width="6%">&nbsp;</td>
+      <td width="44%"></td>
+      <td width="50%" align="right"></td>
+    </tr>
+    <tr>
+      <td width="6%">&nbsp;</td>
+      <td colspan="2">&nbsp;</td>
+    </tr>
+  </tbody></table>
+
+<table width="100%" border="0" cellspacing="0" cellpadding="0" bgcolor="#FFFFFF">
+    <tbody><tr>
+      <td colspan="8" height="25">&nbsp;</td>
+    </tr>
+    <tr>
+      <td colspan="8" height="25" bgcolor="#A49A6A">&nbsp;</td>
+    </tr>
+  </tbody></table>
+<input type="hidden" name="page_action">
+<input type="hidden" name="print_page">
+<input type="hidden" name="emp_id" value="15006-00124">
+<input type="hidden" name="grade_name_">
+<input type="hidden" name="is_final_copy">
+
+<input type="hidden" name="prev_val_studid">
+<input type="hidden" name="prev_val_abs">
+<input type="hidden" name="prev_val_grade">
+<input type="hidden" name="prev_val_remark">
+<input type="hidden" name="del_one">
+
+<script language="javascript">
+
+var vFailedGrade = "";
+function ConvertGrade(){
+	var bolError = false;
+	if(!document.gsheet.convert_grade.checked)
+		return;
+	var iGradeToEncode = document.gsheet.disp_count_gs_pending.value;
+	var gradeEncoded   = ""; var gradeEquivalent = ""; var gradePercent;
+	for(i = 0; i < iGradeToEncode; ++i) {
+		eval("gradePercent = document.gsheet.grade_percent"+i);
+		if(!gradePercent)
+			continue;
+		gradeEncoded = gradePercent.value;
+		if(gradeEncoded.length == 0) {
+			eval("document.gsheet.grade"+i+".value=''");
+			continue;
+		}
+		gradeEquivalent = "";
+		//I have to now check for if grade is within limit
+		
+			if(gradeEncoded >= 0.0 &&
+					gradeEncoded <= 0.0)
+				gradeEquivalent = 7.0;
+		
+			else if(gradeEncoded >= 0.0 &&
+					gradeEncoded <= 0.0)
+				gradeEquivalent = 6.0;
+		
+			else if(gradeEncoded >= 1.0 &&
+					gradeEncoded <= 74.99)
+				gradeEquivalent = 5.0;
+		
+			else if(gradeEncoded >= 0.0 &&
+					gradeEncoded <= 0.0)
+				gradeEquivalent = 4.0;
+		
+			else if(gradeEncoded >= 75.0 &&
+					gradeEncoded <= 77.99)
+				gradeEquivalent = 3.0;
+		
+			else if(gradeEncoded >= 78.0 &&
+					gradeEncoded <= 80.99)
+				gradeEquivalent = 2.75;
+		
+			else if(gradeEncoded >= 81.0 &&
+					gradeEncoded <= 83.99)
+				gradeEquivalent = 2.5;
+		
+			else if(gradeEncoded >= 84.0 &&
+					gradeEncoded <= 86.99)
+				gradeEquivalent = 2.25;
+		
+			else if(gradeEncoded >= 87.0 &&
+					gradeEncoded <= 89.99)
+				gradeEquivalent = 2.0;
+		
+			else if(gradeEncoded >= 90.0 &&
+					gradeEncoded <= 92.99)
+				gradeEquivalent = 1.75;
+		
+			else if(gradeEncoded >= 93.0 &&
+					gradeEncoded <= 95.99)
+				gradeEquivalent = 1.5;
+		
+			else if(gradeEncoded >= 96.0 &&
+					gradeEncoded <= 98.99)
+				gradeEquivalent = 1.25;
+		
+			else if(gradeEncoded >= 99.0 &&
+					gradeEncoded <= 100.0)
+				gradeEquivalent = 1.0;
+		
+		//if grade equivalent is having final point, change it, else continue;
+
+		if(gradeEquivalent.length == 0) {
+			bolError = true;
+			continue;
+		}
+		else
+			eval("document.gsheet.grade"+i+".value=gradeEquivalent");
+	}
+	if(bolError)
+		alert("Error in converting grade. Please check all grades encoded.");
+
+}
+
+</script>
+</form>
+
+
+
+</body></html>
