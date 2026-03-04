@@ -1,0 +1,843 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Book Scraper — books.toscrape.com</title>
+
+  <!-- Google Fonts: Playfair Display for headings, Lora for body -->
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,500;0,700;1,500&family=Lora:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet" />
+
+  <style>
+    /* ─── Design tokens ──────────────────────────────────────────── */
+    :root {
+      --ink:       #1a1208;
+      --paper:     #f8f3ea;
+      --cream:     #efe8d8;
+      --accent:    #8b3a1f;       /* deep terracotta */
+      --accent2:   #c4824a;       /* warm amber */
+      --muted:     #8a7a68;
+      --border:    #d4c9b5;
+      --row-even:  #faf7f2;
+      --row-hover: #fdecd8;
+      --shadow:    0 4px 24px rgba(26,18,8,.10);
+    }
+
+    /* ─── Reset & base ───────────────────────────────────────────── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Lora', Georgia, serif;
+      background: var(--paper);
+      color: var(--ink);
+      min-height: 100vh;
+      /* Subtle grain texture via SVG data URI */
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='300' height='300' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");
+    }
+
+    /* ─── Layout wrapper ─────────────────────────────────────────── */
+    .page {
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 48px 24px 80px;
+    }
+
+    /* ─── Header ─────────────────────────────────────────────────── */
+    header {
+      text-align: center;
+      margin-bottom: 40px;
+      position: relative;
+    }
+    .eyebrow {
+      font-family: 'Lora', serif;
+      font-size: 11px;
+      letter-spacing: .22em;
+      text-transform: uppercase;
+      color: var(--accent);
+      margin-bottom: 12px;
+    }
+    h1 {
+      font-family: 'Playfair Display', serif;
+      font-size: clamp(2rem, 5vw, 3.2rem);
+      font-weight: 700;
+      line-height: 1.15;
+      color: var(--ink);
+    }
+    h1 em {
+      font-style: italic;
+      color: var(--accent);
+    }
+    .subtitle {
+      margin-top: 12px;
+      color: var(--muted);
+      font-size: .95rem;
+      max-width: 520px;
+      margin-inline: auto;
+      line-height: 1.7;
+    }
+    .ornament {
+      display: block;
+      margin: 20px auto 0;
+      width: 120px;
+      height: 2px;
+      background: linear-gradient(90deg, transparent, var(--accent2), transparent);
+    }
+
+    /* ─── Control panel ──────────────────────────────────────────── */
+    .controls {
+      background: white;
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      padding: 28px 32px;
+      box-shadow: var(--shadow);
+      margin-bottom: 36px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 16px;
+      align-items: flex-end;
+    }
+    .field {
+      flex: 1 1 320px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    label {
+      font-size: .8rem;
+      letter-spacing: .1em;
+      text-transform: uppercase;
+      color: var(--muted);
+      font-family: 'Lora', serif;
+    }
+    input[type="url"] {
+      font-family: 'Lora', serif;
+      font-size: .95rem;
+      border: 1.5px solid var(--border);
+      border-radius: 3px;
+      padding: 10px 14px;
+      color: var(--ink);
+      background: var(--paper);
+      outline: none;
+      transition: border-color .2s;
+      width: 100%;
+    }
+    input[type="url"]:focus { border-color: var(--accent2); }
+
+    /* Page selector */
+    .page-btns {
+      display: flex;
+      gap: 6px;
+      flex-wrap: wrap;
+      flex: 0 0 auto;
+    }
+    .page-btns span {
+      font-size: .78rem;
+      letter-spacing: .1em;
+      text-transform: uppercase;
+      color: var(--muted);
+      align-self: flex-end;
+      margin-bottom: 10px;
+      margin-right: 4px;
+    }
+    .pg-btn {
+      background: var(--cream);
+      border: 1.5px solid var(--border);
+      color: var(--ink);
+      border-radius: 3px;
+      padding: 9px 14px;
+      font-family: 'Lora', serif;
+      font-size: .85rem;
+      cursor: pointer;
+      transition: all .18s;
+      align-self: flex-end;
+    }
+    .pg-btn:hover, .pg-btn.active {
+      background: var(--accent);
+      border-color: var(--accent);
+      color: white;
+    }
+
+    /* Scrape button */
+    .btn-scrape {
+      background: var(--accent);
+      color: white;
+      border: none;
+      border-radius: 3px;
+      padding: 11px 28px;
+      font-family: 'Playfair Display', serif;
+      font-size: 1rem;
+      font-style: italic;
+      cursor: pointer;
+      transition: background .2s, transform .1s;
+      white-space: nowrap;
+      align-self: flex-end;
+      box-shadow: 0 2px 8px rgba(139,58,31,.25);
+    }
+    .btn-scrape:hover { background: #72301a; transform: translateY(-1px); }
+    .btn-scrape:active { transform: translateY(0); }
+    .btn-scrape:disabled { background: var(--muted); cursor: not-allowed; transform: none; }
+
+    /* ─── Status bar ─────────────────────────────────────────────── */
+    #status-bar {
+      display: none;
+      align-items: center;
+      gap: 12px;
+      padding: 14px 20px;
+      border-radius: 4px;
+      margin-bottom: 24px;
+      font-size: .9rem;
+    }
+    #status-bar.loading {
+      display: flex;
+      background: #fff8f0;
+      border: 1px solid var(--accent2);
+      color: var(--accent);
+    }
+    #status-bar.error {
+      display: flex;
+      background: #fff0f0;
+      border: 1px solid #e05050;
+      color: #c03030;
+    }
+    #status-bar.done {
+      display: flex;
+      background: #f0fff4;
+      border: 1px solid #5cba7d;
+      color: #2d7a4e;
+    }
+
+    /* Spinner */
+    .spinner {
+      width: 18px; height: 18px;
+      border: 2.5px solid currentColor;
+      border-top-color: transparent;
+      border-radius: 50%;
+      animation: spin .7s linear infinite;
+      flex-shrink: 0;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* ─── Stats row ──────────────────────────────────────────────── */
+    #stats-row {
+      display: none;
+      gap: 16px;
+      margin-bottom: 28px;
+      flex-wrap: wrap;
+    }
+    #stats-row.visible { display: flex; }
+    .stat-card {
+      flex: 1 1 130px;
+      background: white;
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      padding: 16px 20px;
+      box-shadow: var(--shadow);
+      text-align: center;
+    }
+    .stat-card .num {
+      font-family: 'Playfair Display', serif;
+      font-size: 2rem;
+      font-weight: 700;
+      color: var(--accent);
+      display: block;
+      line-height: 1;
+    }
+    .stat-card .lbl {
+      font-size: .72rem;
+      letter-spacing: .12em;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-top: 6px;
+    }
+
+    /* ─── Search / filter bar ────────────────────────────────────── */
+    #filter-bar {
+      display: none;
+      margin-bottom: 18px;
+      gap: 12px;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+    #filter-bar.visible { display: flex; }
+    #filter-bar input {
+      font-family: 'Lora', serif;
+      font-size: .9rem;
+      border: 1.5px solid var(--border);
+      border-radius: 3px;
+      padding: 8px 12px;
+      background: var(--paper);
+      outline: none;
+      color: var(--ink);
+      flex: 1 1 200px;
+      transition: border-color .2s;
+    }
+    #filter-bar input:focus { border-color: var(--accent2); }
+    #filter-bar select {
+      font-family: 'Lora', serif;
+      font-size: .85rem;
+      border: 1.5px solid var(--border);
+      border-radius: 3px;
+      padding: 8px 10px;
+      background: var(--paper);
+      color: var(--ink);
+      cursor: pointer;
+      outline: none;
+    }
+    #result-count {
+      font-size: .82rem;
+      color: var(--muted);
+      margin-left: auto;
+      font-style: italic;
+    }
+
+    /* ─── Table ──────────────────────────────────────────────────── */
+    .table-wrap {
+      overflow-x: auto;
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      box-shadow: var(--shadow);
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      background: white;
+      font-size: .9rem;
+    }
+    thead {
+      background: var(--ink);
+      color: var(--paper);
+    }
+    thead th {
+      padding: 14px 18px;
+      text-align: left;
+      font-family: 'Lora', serif;
+      font-size: .72rem;
+      letter-spacing: .15em;
+      text-transform: uppercase;
+      font-weight: 600;
+      white-space: nowrap;
+      cursor: pointer;
+      user-select: none;
+      transition: background .15s;
+    }
+    thead th:hover { background: #2e2418; }
+    thead th .sort-icon { opacity: .45; margin-left: 4px; }
+    thead th.asc  .sort-icon::after { content: ' ↑'; }
+    thead th.desc .sort-icon::after { content: ' ↓'; }
+    thead th:not(.asc):not(.desc) .sort-icon::after { content: ' ↕'; }
+
+    tbody tr {
+      border-bottom: 1px solid var(--border);
+      transition: background .15s;
+      animation: fadeIn .3s ease both;
+    }
+    tbody tr:nth-child(even) { background: var(--row-even); }
+    tbody tr:hover { background: var(--row-hover); }
+    @keyframes fadeIn { from { opacity:0; transform: translateY(4px); } to { opacity:1; transform: none; } }
+
+    td {
+      padding: 13px 18px;
+      vertical-align: middle;
+      line-height: 1.5;
+    }
+
+    /* Row number */
+    td.num-col {
+      color: var(--muted);
+      font-size: .78rem;
+      width: 40px;
+      text-align: center;
+      font-style: italic;
+    }
+
+    /* Title */
+    td.title-col {
+      font-family: 'Playfair Display', serif;
+      font-size: .95rem;
+      max-width: 280px;
+    }
+    td.title-col a {
+      color: var(--ink);
+      text-decoration: none;
+      transition: color .15s;
+    }
+    td.title-col a:hover { color: var(--accent); text-decoration: underline; }
+
+    /* Author — note: not available on books.toscrape.com */
+    td.author-col { color: var(--muted); font-style: italic; }
+
+    /* Price */
+    td.price-col {
+      font-family: 'Playfair Display', serif;
+      font-size: 1.05rem;
+      color: var(--accent);
+      font-weight: 700;
+      white-space: nowrap;
+    }
+
+    /* Star rating */
+    .stars { color: var(--accent2); font-size: 1rem; letter-spacing: 1px; }
+    .stars-label { font-size: .72rem; color: var(--muted); margin-left: 4px; }
+
+    /* Availability badge */
+    .badge {
+      display: inline-block;
+      padding: 3px 10px;
+      border-radius: 20px;
+      font-size: .72rem;
+      letter-spacing: .08em;
+      text-transform: uppercase;
+      font-weight: 600;
+    }
+    .badge.in  { background: #e8f7ee; color: #2d7a4e; border: 1px solid #a8d8bb; }
+    .badge.out { background: #fdecea; color: #c03030; border: 1px solid #f4b0ae; }
+
+    /* ─── Empty state ────────────────────────────────────────────── */
+    #empty-state {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 80px 24px;
+      color: var(--muted);
+      gap: 14px;
+      text-align: center;
+    }
+    #empty-state .icon { font-size: 3rem; }
+    #empty-state p { font-style: italic; }
+
+    /* ─── Export button ──────────────────────────────────────────── */
+    #export-bar {
+      display: none;
+      margin-top: 20px;
+      justify-content: flex-end;
+      gap: 10px;
+    }
+    #export-bar.visible { display: flex; }
+    .btn-export {
+      background: var(--cream);
+      border: 1.5px solid var(--border);
+      border-radius: 3px;
+      padding: 8px 18px;
+      font-family: 'Lora', serif;
+      font-size: .85rem;
+      cursor: pointer;
+      color: var(--ink);
+      transition: all .18s;
+    }
+    .btn-export:hover { background: var(--accent); border-color: var(--accent); color: white; }
+
+    /* ─── Note banner ────────────────────────────────────────────── */
+    .note {
+      background: #fffbf0;
+      border-left: 3px solid var(--accent2);
+      padding: 12px 18px;
+      font-size: .83rem;
+      color: var(--muted);
+      border-radius: 0 4px 4px 0;
+      margin-bottom: 28px;
+      line-height: 1.6;
+    }
+    .note strong { color: var(--ink); }
+  </style>
+</head>
+<body>
+<div class="page">
+
+  <!-- Header -->
+  <header>
+    <p class="eyebrow">JavaScript Web Scraper</p>
+    <h1>The <em>Book</em> Shelf</h1>
+    <p class="subtitle">
+      Scrapes live data from <strong>books.toscrape.com</strong> —
+      a sandbox site designed for practicing web scraping.
+    </p>
+    <span class="ornament"></span>
+  </header>
+
+  <!-- How-it-works note -->
+  <div class="note">
+    <strong>How it works:</strong> This app uses a CORS proxy (<code>allorigins.win</code>) to
+    fetch the raw HTML from books.toscrape.com, then parses it entirely in the browser with
+    <code>DOMParser</code> — no server required. <strong>Note:</strong> <em>books.toscrape.com</em>
+    is a fictional demo catalog and does not include author names; that column is marked N/A.
+  </div>
+
+  <!-- Controls -->
+  <div class="controls">
+    <div class="field">
+      <label>Target URL</label>
+      <input
+        type="url"
+        id="url-input"
+        value="https://books.toscrape.com/catalogue/page-1.html"
+        placeholder="https://books.toscrape.com/..."
+      />
+    </div>
+    <div class="page-btns">
+      <span>Quick pages:</span>
+      <!-- Clicking these sets the URL and triggers a scrape -->
+      <button class="pg-btn active" data-page="1">1</button>
+      <button class="pg-btn" data-page="2">2</button>
+      <button class="pg-btn" data-page="3">3</button>
+      <button class="pg-btn" data-page="4">4</button>
+      <button class="pg-btn" data-page="5">5</button>
+    </div>
+    <button class="btn-scrape" id="scrape-btn" onclick="scrape()">
+      ✦ Scrape Books
+    </button>
+  </div>
+
+  <!-- Status bar -->
+  <div id="status-bar"></div>
+
+  <!-- Stats -->
+  <div id="stats-row">
+    <div class="stat-card"><span class="num" id="stat-total">0</span><span class="lbl">Books Found</span></div>
+    <div class="stat-card"><span class="num" id="stat-cheapest">—</span><span class="lbl">Lowest Price</span></div>
+    <div class="stat-card"><span class="num" id="stat-priciest">—</span><span class="lbl">Highest Price</span></div>
+    <div class="stat-card"><span class="num" id="stat-avg">—</span><span class="lbl">Avg. Price</span></div>
+    <div class="stat-card"><span class="num" id="stat-instock">0</span><span class="lbl">In Stock</span></div>
+  </div>
+
+  <!-- Filter bar (shown once data loaded) -->
+  <div id="filter-bar">
+    <input type="text" id="search-input" placeholder="Filter by title…" oninput="renderTable()" />
+    <select id="rating-filter" onchange="renderTable()">
+      <option value="">All Ratings</option>
+      <option value="5">★★★★★ Five</option>
+      <option value="4">★★★★☆ Four+</option>
+      <option value="3">★★★☆☆ Three+</option>
+      <option value="2">★★☆☆☆ Two+</option>
+    </select>
+    <select id="avail-filter" onchange="renderTable()">
+      <option value="">All Availability</option>
+      <option value="in">In Stock</option>
+      <option value="out">Out of Stock</option>
+    </select>
+    <span id="result-count"></span>
+  </div>
+
+  <!-- Table (initially shows empty state) -->
+  <div class="table-wrap" id="table-wrap">
+    <div id="empty-state">
+      <span class="icon">📚</span>
+      <p>Enter a URL above and click <em>Scrape Books</em> to begin.</p>
+    </div>
+    <table id="books-table" style="display:none;">
+      <thead>
+        <tr>
+          <th>#</th>
+          <!-- Sortable columns store current sort state via class -->
+          <th onclick="sortBy('title')" id="th-title">Title <span class="sort-icon"></span></th>
+          <th onclick="sortBy('author')" id="th-author">Author <span class="sort-icon"></span></th>
+          <th onclick="sortBy('price')" id="th-price">Price <span class="sort-icon"></span></th>
+          <th onclick="sortBy('rating')" id="th-rating">Rating <span class="sort-icon"></span></th>
+          <th onclick="sortBy('availability')" id="th-availability">Availability <span class="sort-icon"></span></th>
+        </tr>
+      </thead>
+      <tbody id="table-body"></tbody>
+    </table>
+  </div>
+
+  <!-- Export -->
+  <div id="export-bar">
+    <button class="btn-export" onclick="exportCSV()">⬇ Export CSV</button>
+    <button class="btn-export" onclick="exportJSON()">⬇ Export JSON</button>
+  </div>
+
+</div><!-- /page -->
+
+<script>
+  // ─── State ────────────────────────────────────────────────────────
+  let allBooks   = [];          // raw scraped data
+  let sortKey    = 'title';
+  let sortDir    = 'asc';
+  let activePage = 1;
+
+  // Map star-word → numeric value (books.toscrape.com uses CSS class names)
+  const STAR_MAP = { One:1, Two:2, Three:3, Four:4, Five:5 };
+
+  // ─── Quick-page buttons ───────────────────────────────────────────
+  document.querySelectorAll('.pg-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      // Update URL input
+      const p = btn.dataset.page;
+      document.getElementById('url-input').value =
+        `https://books.toscrape.com/catalogue/page-${p}.html`;
+      // Highlight active button
+      document.querySelectorAll('.pg-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      activePage = +p;
+      // Auto-scrape
+      scrape();
+    });
+  });
+
+  // ─── Main scrape function ─────────────────────────────────────────
+  async function scrape() {
+    const url = document.getElementById('url-input').value.trim();
+    if (!url) return setStatus('error', '⚠ Please enter a valid URL.');
+
+    // Validate that the URL points to books.toscrape.com
+    if (!url.includes('books.toscrape.com')) {
+      return setStatus('error', '⚠ URL must be from books.toscrape.com.');
+    }
+
+    setStatus('loading', 'Fetching page via CORS proxy…');
+    document.getElementById('scrape-btn').disabled = true;
+
+    try {
+      // We route through allorigins.win to bypass CORS restrictions.
+      // allorigins returns: { contents: "<html>…</html>", status: { … } }
+      const proxyUrl = `https://api.allorigins.win/get?url=${encodeURIComponent(url)}`;
+      const response = await fetch(proxyUrl);
+
+      if (!response.ok) throw new Error(`Proxy error: ${response.status}`);
+
+      const json = await response.json();
+      const html = json.contents;
+
+      if (!html) throw new Error('Empty response from proxy.');
+
+      setStatus('loading', 'Parsing HTML with DOMParser…');
+
+      // Parse the HTML string into a proper DOM tree
+      const parser = new DOMParser();
+      const doc    = parser.parseFromString(html, 'text/html');
+
+      // Each book lives inside an <article class="product_pod">
+      const articles = doc.querySelectorAll('article.product_pod');
+
+      if (articles.length === 0)
+        throw new Error('No books found — check the URL or try another page.');
+
+      // Extract data for each book
+      allBooks = Array.from(articles).map((article, idx) => {
+        // Title is stored in the 'title' attribute of the <a> tag inside <h3>
+        const anchor = article.querySelector('h3 a');
+        const title  = anchor?.getAttribute('title') || anchor?.textContent?.trim() || 'Unknown';
+
+        // Relative URL to book detail page (we keep it for linking)
+        const relHref = anchor?.getAttribute('href') || '';
+        const bookUrl = resolveUrl(url, relHref);
+
+        // Price is in <p class="price_color">
+        const priceText = article.querySelector('.price_color')?.textContent?.trim() || '£0.00';
+        // Strip the currency symbol and parse as float for sorting/stats
+        const price = parseFloat(priceText.replace(/[^0-9.]/g, '')) || 0;
+
+        // Star rating is encoded as a CSS class: "star-rating Three"
+        const ratingClass = article.querySelector('.star-rating')?.className || '';
+        const ratingWord  = ratingClass.split(' ').find(c => STAR_MAP[c]) || 'Zero';
+        const rating      = STAR_MAP[ratingWord] || 0;
+
+        // Availability: check if "In stock" text is present
+        const availText = article.querySelector('.availability')?.textContent?.trim() || '';
+        const inStock   = availText.toLowerCase().includes('in stock');
+
+        return {
+          title,
+          author: 'N/A',   // books.toscrape.com does not expose author on listing pages
+          priceText,
+          price,
+          rating,
+          ratingWord,
+          inStock,
+          bookUrl,
+        };
+      });
+
+      // Compute summary stats
+      const prices    = allBooks.map(b => b.price);
+      const inStockN  = allBooks.filter(b => b.inStock).length;
+      const cheapest  = Math.min(...prices).toFixed(2);
+      const priciest  = Math.max(...prices).toFixed(2);
+      const avg       = (prices.reduce((a,b) => a+b, 0) / prices.length).toFixed(2);
+
+      document.getElementById('stat-total').textContent    = allBooks.length;
+      document.getElementById('stat-cheapest').textContent = `£${cheapest}`;
+      document.getElementById('stat-priciest').textContent = `£${priciest}`;
+      document.getElementById('stat-avg').textContent      = `£${avg}`;
+      document.getElementById('stat-instock').textContent  = inStockN;
+
+      // Show UI sections
+      document.getElementById('stats-row').classList.add('visible');
+      document.getElementById('filter-bar').classList.add('visible');
+      document.getElementById('export-bar').classList.add('visible');
+
+      // Reset filters & render
+      document.getElementById('search-input').value  = '';
+      document.getElementById('rating-filter').value = '';
+      document.getElementById('avail-filter').value  = '';
+      sortKey = 'title'; sortDir = 'asc';
+      updateSortHeaders();
+      renderTable();
+
+      setStatus('done', `✓ Successfully scraped ${allBooks.length} books from ${url}`);
+
+    } catch (err) {
+      setStatus('error', `⚠ ${err.message}`);
+      console.error(err);
+    } finally {
+      document.getElementById('scrape-btn').disabled = false;
+    }
+  }
+
+  // ─── Render the filtered + sorted table ──────────────────────────
+  function renderTable() {
+    const query     = document.getElementById('search-input').value.toLowerCase();
+    const minRating = +document.getElementById('rating-filter').value || 0;
+    const availVal  = document.getElementById('avail-filter').value;
+
+    // Apply filters
+    let rows = allBooks.filter(b => {
+      if (query && !b.title.toLowerCase().includes(query)) return false;
+      if (b.rating < minRating) return false;
+      if (availVal === 'in'  && !b.inStock) return false;
+      if (availVal === 'out' &&  b.inStock) return false;
+      return true;
+    });
+
+    // Apply sort
+    rows = [...rows].sort((a, b) => {
+      let av = a[sortKey], bv = b[sortKey];
+      if (typeof av === 'string') av = av.toLowerCase();
+      if (typeof bv === 'string') bv = bv.toLowerCase();
+      if (av < bv) return sortDir === 'asc' ? -1 :  1;
+      if (av > bv) return sortDir === 'asc' ?  1 : -1;
+      return 0;
+    });
+
+    document.getElementById('result-count').textContent =
+      `${rows.length} of ${allBooks.length} books`;
+
+    const tbody   = document.getElementById('table-body');
+    const table   = document.getElementById('books-table');
+    const empty   = document.getElementById('empty-state');
+
+    if (rows.length === 0 && allBooks.length > 0) {
+      // No filter match
+      tbody.innerHTML = '';
+      table.style.display = 'none';
+      empty.style.display = 'flex';
+      empty.querySelector('.icon').textContent = '🔍';
+      empty.querySelector('p').textContent = 'No books match the current filters.';
+      return;
+    }
+
+    // Build table rows
+    tbody.innerHTML = rows.map((b, i) => {
+      const stars   = '★'.repeat(b.rating) + '☆'.repeat(5 - b.rating);
+      const badge   = b.inStock
+        ? `<span class="badge in">In Stock</span>`
+        : `<span class="badge out">Out of Stock</span>`;
+      // Animate rows with a staggered delay
+      const delay = Math.min(i * 30, 400);
+
+      return `
+        <tr style="animation-delay:${delay}ms">
+          <td class="num-col">${i + 1}</td>
+          <td class="title-col">
+            <a href="${b.bookUrl}" target="_blank" rel="noopener" title="Open on books.toscrape.com">
+              ${escHtml(b.title)}
+            </a>
+          </td>
+          <td class="author-col">${escHtml(b.author)}</td>
+          <td class="price-col">${escHtml(b.priceText)}</td>
+          <td>
+            <span class="stars" title="${b.rating} out of 5">${stars}</span>
+            <span class="stars-label">${b.ratingWord}</span>
+          </td>
+          <td>${badge}</td>
+        </tr>`;
+    }).join('');
+
+    table.style.display = 'table';
+    empty.style.display = 'none';
+  }
+
+  // ─── Sorting ──────────────────────────────────────────────────────
+  function sortBy(key) {
+    if (sortKey === key) {
+      sortDir = sortDir === 'asc' ? 'desc' : 'asc';
+    } else {
+      sortKey = key;
+      sortDir = 'asc';
+    }
+    updateSortHeaders();
+    renderTable();
+  }
+
+  function updateSortHeaders() {
+    ['title','author','price','rating','availability'].forEach(k => {
+      const th = document.getElementById(`th-${k}`);
+      if (!th) return;
+      th.className = k === sortKey ? sortDir : '';
+    });
+  }
+
+  // ─── Status helper ────────────────────────────────────────────────
+  function setStatus(type, msg) {
+    const bar = document.getElementById('status-bar');
+    bar.className = type;
+    bar.innerHTML = type === 'loading'
+      ? `<span class="spinner"></span>${msg}`
+      : msg;
+  }
+
+  // ─── Resolve relative book URLs ───────────────────────────────────
+  function resolveUrl(base, rel) {
+    try {
+      // Use the URL constructor to properly resolve relative paths
+      return new URL(rel, base).href;
+    } catch {
+      return rel;
+    }
+  }
+
+  // ─── HTML escape ──────────────────────────────────────────────────
+  function escHtml(str) {
+    return String(str)
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;');
+  }
+
+  // ─── Export CSV ───────────────────────────────────────────────────
+  function exportCSV() {
+    const header = ['Title', 'Author', 'Price', 'Rating', 'In Stock', 'URL'];
+    const rows   = allBooks.map(b => [
+      `"${b.title.replace(/"/g, '""')}"`,
+      `"${b.author}"`,
+      b.priceText,
+      b.rating,
+      b.inStock ? 'Yes' : 'No',
+      b.bookUrl,
+    ].join(','));
+    const csv = [header.join(','), ...rows].join('\n');
+    downloadText(csv, 'books.csv', 'text/csv');
+  }
+
+  // ─── Export JSON ──────────────────────────────────────────────────
+  function exportJSON() {
+    const data = allBooks.map(({ title, author, priceText, price, rating, inStock, bookUrl }) =>
+      ({ title, author, price: priceText, priceNumeric: price, rating, inStock, url: bookUrl })
+    );
+    downloadText(JSON.stringify(data, null, 2), 'books.json', 'application/json');
+  }
+
+  function downloadText(text, filename, type) {
+    const blob = new Blob([text], { type });
+    const a = Object.assign(document.createElement('a'), {
+      href: URL.createObjectURL(blob),
+      download: filename,
+    });
+    a.click();
+    URL.revokeObjectURL(a.href);
+  }
+
+  // ─── Auto-load page 1 on startup ──────────────────────────────────
+  window.addEventListener('load', () => scrape());
+</script>
+</body>
+</html>
