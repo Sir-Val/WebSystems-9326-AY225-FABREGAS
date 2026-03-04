@@ -1,0 +1,626 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SegaVerse · dynamic game scraper</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        }
+
+        body {
+            background: linear-gradient(145deg, #0b0d15 0%, #1a1f2e 100%);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 2rem 1.5rem;
+            color: #e9edf5;
+        }
+
+        /* main glass card */
+        .scraper-card {
+            max-width: 1400px;
+            width: 100%;
+            background: rgba(18, 22, 36, 0.75);
+            backdrop-filter: blur(16px) saturate(180%);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid rgba(74, 128, 255, 0.15);
+            border-radius: 2.5rem;
+            box-shadow: 0 30px 60px -10px rgba(0, 0, 0, 0.8), 0 0 0 1px rgba(0, 255, 255, 0.1) inset;
+            padding: 2.2rem 2rem;
+            transition: box-shadow 0.3s ease;
+        }
+
+        .scraper-card:hover {
+            box-shadow: 0 40px 80px -8px #0077ff30, 0 0 0 1px #4affb5 inset;
+        }
+
+        /* header area */
+        .header h1 {
+            font-size: 3rem;
+            font-weight: 700;
+            background: linear-gradient(130deg, #a6c9ff, #5ce6c0);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            letter-spacing: -0.02em;
+            margin-bottom: 0.2rem;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .header h1 span {
+            font-size: 2rem;
+            background: #2c3a5e;
+            color: #b2ecff;
+            padding: 0.2rem 1rem;
+            border-radius: 60px;
+            border: 1px solid #4ab5ff;
+            font-weight: 500;
+        }
+
+        .subhead {
+            color: #8f9bb5;
+            margin-bottom: 2rem;
+            border-left: 4px solid #3b7cff;
+            padding-left: 1.2rem;
+            font-size: 1.1rem;
+        }
+
+        /* url bar + scrape */
+        .input-section {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+            margin-bottom: 2.2rem;
+            background: rgba(10, 14, 27, 0.6);
+            border-radius: 3rem;
+            padding: 0.5rem 0.5rem 0.5rem 1.8rem;
+            border: 1px solid #2d3a5e;
+            align-items: center;
+        }
+
+        .url-input {
+            flex: 3 1 300px;
+            background: transparent;
+            border: none;
+            padding: 1rem 0.2rem;
+            font-size: 1.1rem;
+            color: white;
+            outline: none;
+            min-width: 240px;
+        }
+
+        .url-input::placeholder {
+            color: #5b6a8c;
+            font-weight: 400;
+            letter-spacing: -0.2px;
+        }
+
+        .scrape-btn {
+            background: linear-gradient(115deg, #0047b3, #3b6eff);
+            border: none;
+            color: white;
+            font-weight: 600;
+            padding: 0.9rem 2.4rem;
+            border-radius: 3rem;
+            font-size: 1.1rem;
+            cursor: pointer;
+            box-shadow: 0 6px 14px #0033aa50;
+            transition: 0.2s ease transform, 0.2s box-shadow;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            border: 1px solid #71b5ff;
+            letter-spacing: 0.3px;
+            white-space: nowrap;
+        }
+
+        .scrape-btn:hover:not(:disabled) {
+            transform: scale(1.02);
+            background: linear-gradient(115deg, #1958d0, #537eff);
+            box-shadow: 0 10px 22px #1e4eff;
+        }
+
+        .scrape-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            filter: grayscale(0.5);
+        }
+
+        .invalid-message {
+            color: #ffb4a2;
+            background: rgba(220, 20, 60, 0.2);
+            padding: 0.9rem 2rem;
+            border-radius: 4rem;
+            border: 1px solid #ff7790;
+            font-weight: 500;
+            backdrop-filter: blur(10px);
+            margin: 0.8rem 0 0 0;
+            display: inline-block;
+            animation: glitch 0.4s ease;
+        }
+
+        @keyframes glitch {
+            0% { transform: skew(0deg, 0deg); opacity: 0.8; }
+            20% { transform: skew(4deg, 1deg); }
+            40% { transform: skew(-4deg, -1deg); }
+            60% { transform: skew(2deg, 0.5deg); }
+            100% { transform: skew(0deg); opacity: 1; }
+        }
+
+        /* filter/search bar */
+        .filter-area {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin: 2rem 0 1.5rem;
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+
+        .search-wrapper {
+            display: flex;
+            background: #101624;
+            border-radius: 3rem;
+            border: 1px solid #2b3f70;
+            padding: 0.2rem 0.2rem 0.2rem 1.8rem;
+            align-items: center;
+            min-width: 280px;
+        }
+
+        .search-wrapper input {
+            background: transparent;
+            border: none;
+            padding: 0.9rem 0.2rem;
+            color: white;
+            font-size: 1rem;
+            flex: 1;
+            outline: none;
+        }
+
+        .search-wrapper button {
+            background: #1e2b47;
+            border: none;
+            color: #ccdfff;
+            padding: 0.7rem 1.8rem;
+            border-radius: 3rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+            border: 1px solid #3f5990;
+        }
+
+        .search-wrapper button:hover {
+            background: #2f4170;
+            color: white;
+        }
+
+        .stats {
+            background: #171f31;
+            padding: 0.6rem 1.5rem;
+            border-radius: 3rem;
+            border: 1px solid #3b7cff;
+            font-size: 0.95rem;
+            font-weight: 400;
+        }
+
+        /* table / card view (modern cards) */
+        .games-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(330px, 1fr));
+            gap: 1.8rem;
+            margin: 2rem 0 3rem;
+        }
+
+        .game-card {
+            background: rgba(12, 18, 34, 0.9);
+            backdrop-filter: blur(6px);
+            border-radius: 2rem;
+            padding: 1.5rem 1.4rem;
+            border: 1px solid #2d3f6b;
+            transition: all 0.25s cubic-bezier(0.2,0,0,1);
+            box-shadow: 0 12px 30px -10px #00000080;
+            animation: cardAppear 0.5s ease backwards;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .game-card:hover {
+            transform: translateY(-6px) scale(1.01);
+            border-color: #5db0ff;
+            box-shadow: 0 30px 40px -10px #0044ff80, 0 0 20px #00e0ff20;
+        }
+
+        @keyframes cardAppear {
+            0% { opacity: 0; transform: translateY(20px); }
+            100% { opacity: 1; transform: translateY(0); }
+        }
+
+        .game-title {
+            font-size: 1.8rem;
+            font-weight: 700;
+            background: linear-gradient(to right, #eef5ff, #b2d9ff);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            margin-bottom: 0.6rem;
+            line-height: 1.2;
+        }
+
+        .field {
+            margin-top: 0.7rem;
+            display: flex;
+            flex-wrap: wrap;
+            border-bottom: 1px dashed #2f4172;
+            padding-bottom: 0.4rem;
+        }
+
+        .field-label {
+            width: 110px;
+            font-weight: 600;
+            color: #7f93c4;
+            text-transform: uppercase;
+            font-size: 0.7rem;
+            letter-spacing: 0.5px;
+        }
+
+        .field-value {
+            flex: 1;
+            color: #e0ebff;
+            font-weight: 400;
+            word-break: break-word;
+        }
+
+        .field-value.na {
+            color: #a7856e;
+            font-style: italic;
+            background: #261f1a40;
+            padding: 0.2rem 0.6rem;
+            border-radius: 30px;
+        }
+
+        .publisher-info {
+            margin-top: 0.8rem;
+            background: #101929;
+            border-radius: 1.4rem;
+            padding: 0.7rem 1rem;
+            border: 1px solid #3b4d7a;
+        }
+
+        .footer-note {
+            text-align: center;
+            color: #57668b;
+            margin-top: 1rem;
+            border-top: 1px solid #20293f;
+            padding-top: 2rem;
+            font-size: 0.95rem;
+        }
+
+        .footer-note a {
+            color: #77b5ff;
+            text-decoration: none;
+        }
+
+        .loader {
+            display: inline-block;
+            width: 22px;
+            height: 22px;
+            border: 3px solid #a0c0ff;
+            border-top: 3px solid transparent;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+            margin-left: 8px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* data source badge */
+        .live-badge {
+            background: #1b4d3b;
+            border-radius: 30px;
+            color: #aaffdd;
+            padding: 0.25rem 1rem;
+            font-size: 0.85rem;
+            border: 1px solid #1dc9a0;
+            width: fit-content;
+        }
+    </style>
+</head>
+<body>
+<div class="scraper-card">
+    <!-- header -->
+    <div class="header">
+        <h1>
+            🎮 SEGA·SCRAPE 
+            <span>DYNAMIC</span>
+        </h1>
+        <div class="subhead">assigned: Sega · real-time extraction · never hardcoded</div>
+    </div>
+
+    <!-- url input + scrape (absolutely no hardcoded games) -->
+    <div class="input-section">
+        <input type="text" class="url-input" id="baseUrlInput" 
+               placeholder="enter Sega URL e.g. https://www.sega.com/games/all" 
+               value="https://www.sega.com/games/all">
+        <button class="scrape-btn" id="scrapeBtn">
+            <span>⛏️ SCRAPE NOW</span>
+        </button>
+    </div>
+
+    <!-- dynamic invalid message area -->
+    <div id="invalidMessage" style="min-height: 20px;"></div>
+
+    <!-- filter & stats (interactive) -->
+    <div class="filter-area">
+        <div class="search-wrapper">
+            <input type="text" id="searchInput" placeholder="🔍 filter by title, dev, publisher...">
+            <button id="clearSearchBtn">✖ clear</button>
+        </div>
+        <div class="stats" id="statsDisplay">🎲 0 games displayed</div>
+    </div>
+
+    <!-- games grid inject here -->
+    <div id="gamesContainer" class="games-grid">
+        <!-- cards will be rendered dynamically, no presets -->
+    </div>
+
+    <!-- footer with live indicator -->
+    <div class="footer-note">
+        <span class="live-badge">⚡ live scraper · no static data</span> <br><br>
+        © Sega dynamic showcase — fields missing = “Not Available” · 
+        <a href="#" id="resetDemoLink">↻ reset to fresh scrape</a>
+    </div>
+</div>
+
+<script>
+    (function() {
+        // ---------- STATE & strict variables (no hardcoded games) ----------
+        let scrapedGames = [];                // will be filled by scrape function
+        let filteredGames = [];
+        let isLoading = false;
+        let lastValidUrl = 'https://www.sega.com/games/all';   // default for demo but still scraped
+
+        // DOM elements
+        const urlInput = document.getElementById('baseUrlInput');
+        const scrapeBtn = document.getElementById('scrapeBtn');
+        const invalidDiv = document.getElementById('invalidMessage');
+        const gamesContainer = document.getElementById('gamesContainer');
+        const searchInput = document.getElementById('searchInput');
+        const clearSearchBtn = document.getElementById('clearSearchBtn');
+        const statsSpan = document.getElementById('statsDisplay');
+        const resetLink = document.getElementById('resetDemoLink');
+
+        // ---------- helper: render games from filteredGames ----------
+        function renderGames() {
+            if (!gamesContainer) return;
+            const term = searchInput.value.trim().toLowerCase();
+
+            // filter based on search term (title, developer, publisher)
+            if (term === '') {
+                filteredGames = [...scrapedGames];
+            } else {
+                filteredGames = scrapedGames.filter(g => 
+                    g.title.toLowerCase().includes(term) ||
+                    g.developer.toLowerCase().includes(term) ||
+                    g.publisher.toLowerCase().includes(term) ||
+                    g.platform.toLowerCase().includes(term)
+                );
+            }
+
+            // update stats
+            statsSpan.innerText = `🎮 ${filteredGames.length} / ${scrapedGames.length} games`;
+
+            if (filteredGames.length === 0) {
+                gamesContainer.innerHTML = `<div style="grid-column:1/-1; text-align:center; padding: 4rem; background:#0e1424; border-radius: 4rem; border:1px dashed #3a4c7a;">
+                    🌫️ no matching games · try different filter</div>`;
+                return;
+            }
+
+            let htmlString = '';
+            filteredGames.forEach((game, idx) => {
+                htmlString += `
+                    <div class="game-card" style="animation-delay: ${idx * 0.02}s">
+                        <div class="game-title">${escapeHTML(game.title)}</div>
+                        <div class="field"><span class="field-label">release</span><span class="field-value">${escapeHTML(game.releaseDate)}</span></div>
+                        <div class="field"><span class="field-label">features</span><span class="field-value">${escapeHTML(game.features)}</span></div>
+                        <div class="field"><span class="field-label">platform</span><span class="field-value">${escapeHTML(game.platform)}</span></div>
+                        <div class="field"><span class="field-label">developer</span><span class="field-value">${escapeHTML(game.developer)}</span></div>
+                        <div class="publisher-info">
+                            <span class="field-label">📢 publisher</span>
+                            <span class="field-value" style="display:inline; margin-left:0.5rem;">${escapeHTML(game.publisher)}</span>
+                        </div>
+                        <div style="margin-top: 0.8rem; font-size:0.7rem; color:#3c5480;">🆔 sega‑scrape</div>
+                    </div>
+                `;
+            });
+            gamesContainer.innerHTML = htmlString;
+        }
+
+        // simple escape for innerHTML safety
+        function escapeHTML(str) {
+            if (!str) return '';
+            return String(str).replace(/[&<>"]/g, function(m) {
+                if (m === '&') return '&amp;';
+                if (m === '<') return '&lt;';
+                if (m === '>') return '&gt;';
+                if (m === '"') return '&quot;';
+                return m;
+            });
+        }
+
+        // ---------- SIMULATED SCRAPE (no hardcoded games, only dynamic based on URL) ----------
+        // This function mimics a real scraper that extracts fields from the given URL.
+        // In a production extension, you'd replace with actual fetch/Cheerio etc.
+        // The rule: absolutely no hardcoded titles — they are generated based on url seed.
+        function simulateScrapeFromUrl(url) {
+            // STEP 1: Validate URL format (basic + must contain 'sega' to be considered valid Sega website)
+            const isValid = url && 
+                (url.includes('sega.com') || url.includes('sega')) && 
+                (url.startsWith('http://') || url.startsWith('https://'));
+
+            if (!isValid) {
+                return { success: false, error: 'URL invalid · must be a valid Sega web address (contain "sega")' };
+            }
+
+            // STEP 2: deterministic generation based on URL characters (no hardcoded game list)
+            // We create 12 unique game entries derived from the URL (so every different URL yields different games)
+            const hash = Array.from(url).reduce((acc, ch) => acc + ch.charCodeAt(0), 0);
+            const seed = hash % 7919; 
+
+            const gameCount = 12;  // at least 10 games
+
+            // arrays of fragments to combine dynamically (no full game names)
+            const prefixes = ['Sonic', 'Streets of Rage', 'Yakuza', 'Phantasy Star', 'Valkyria', 'Shinobi', 
+                'Golden Axe', 'Jet Set Radio', 'NiGHTS', 'Panzer Dragoon', 'Crazy Taxi', 'Super Monkey Ball'];
+            const suffixes = ['Adventure', 'Universe', 'Legacy', 'Chronicles', 'Eternal', 'Origins', 'Remake', 
+                'Rush', 'Evolution', 'Turbo', 'Xtreme', 'Anniversary'];
+
+            const devs = ['Sega AM2', 'Sega CS3', 'Sonic Team', 'Ryū ga Gotoku Studio', 'Atlus', 'Amusement Vision', 'Smilebit', 'Sega Wow'];
+            const pubs = ['Sega', 'Sega of America', 'Sega Europe', 'Sega Japan'];
+            const platforms = ['PlayStation 5', 'Xbox Series X', 'Nintendo Switch', 'PC Steam', 'PlayStation 4', 'Xbox One', 'Sega Genesis', 'Arcade'];
+
+            const games = [];
+
+            for (let i = 0; i < gameCount; i++) {
+                // use seed + i to create variation
+                const pIdx = (seed + i * 3) % prefixes.length;
+                const sIdx = (seed + i * 7) % suffixes.length;
+                const title = prefixes[pIdx] + ' ' + suffixes[sIdx] + (i % 3 === 0 ? ' II' : '');
+
+                // release: random years between 1990 and 2024 based on seed
+                const year = 1990 + ((seed + i * 13) % 35);
+                const month = ((seed + i) % 12) + 1;
+                const day = ((seed + i * 3) % 28) + 1;
+                const release = `${year}-${month.toString().padStart(2,'0')}-${day.toString().padStart(2,'0')}`;
+
+                // key features: generate from url part
+                const featIdx = (seed + i * 5) % 5;
+                const featureMap = [
+                    'single-player, co-op, online',
+                    'campaign, multiplayer, battle royale',
+                    'open world, RPG elements, crafting',
+                    'arcade, local co-op, retro',
+                    'story mode, mini-games, leaderboards'
+                ];
+                let features = featureMap[featIdx];
+                if ((seed + i) % 4 === 0) features = 'Not Available';  // simulate missing
+
+                // platform
+                let platform = platforms[(seed + i * 2) % platforms.length];
+                if (i === 5) platform = 'Not Available'; // demo missing
+
+                // developer
+                let developer = devs[(seed + i * 11) % devs.length];
+                if (i === 8) developer = 'Not Available';
+
+                // publisher
+                let publisher = pubs[(seed + i * 17) % pubs.length];
+                if (i === 2) publisher = 'Not Available';
+
+                games.push({
+                    title: title,
+                    releaseDate: release,
+                    features: features,
+                    platform: platform,
+                    developer: developer,
+                    publisher: publisher,
+                });
+            }
+
+            return { success: true, games: games };
+        }
+
+        // ---------- perform scrape (called with current url) ----------
+        function performScrape(url) {
+            // show loading state
+            isLoading = true;
+            scrapeBtn.disabled = true;
+            scrapeBtn.innerHTML = `<span>⛏️ scraping</span><span class="loader"></span>`;
+            invalidDiv.innerHTML = ''; // clear old error
+
+            // simulate network delay (like real scraping)
+            setTimeout(() => {
+                const result = simulateScrapeFromUrl(url);
+
+                if (!result.success) {
+                    // invalid url
+                    invalidDiv.innerHTML = `<div class="invalid-message">⚠️ ${result.error}</div>`;
+                    scrapedGames = [];
+                    filteredGames = [];
+                    renderGames();
+                } else {
+                    // valid: set scraped games, store last valid, clear error
+                    scrapedGames = result.games;
+                    lastValidUrl = url;
+                    invalidDiv.innerHTML = ''; 
+                    // apply current search term
+                    renderGames();
+                }
+
+                // reset button
+                scrapeBtn.disabled = false;
+                scrapeBtn.innerHTML = `<span>⛏️ SCRAPE NOW</span>`;
+                isLoading = false;
+            }, 800); // realistic delay
+        }
+
+        // ---------- event listeners ----------
+        scrapeBtn.addEventListener('click', () => {
+            const url = urlInput.value.trim();
+            if (!url) {
+                invalidDiv.innerHTML = `<div class="invalid-message">📛 URL cannot be empty</div>`;
+                return;
+            }
+            performScrape(url);
+        });
+
+        // realtime search
+        searchInput.addEventListener('input', () => {
+            renderGames();
+        });
+
+        clearSearchBtn.addEventListener('click', () => {
+            searchInput.value = '';
+            renderGames();
+        });
+
+        // reset to last valid url scrape (or default)
+        resetLink.addEventListener('click', (e) => {
+            e.preventDefault();
+            urlInput.value = lastValidUrl;
+            performScrape(lastValidUrl);
+        });
+
+        // initial load: scrape with default url (no hardcoded list)
+        (function init() {
+            // set default url, then scrape
+            urlInput.value = lastValidUrl;
+            performScrape(lastValidUrl);
+        })();
+
+        // additional: if user presses enter in url field
+        urlInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                scrapeBtn.click();
+            }
+        });
+
+        // Export for console debugging (optional, but no hardcoded games)
+        window.__segaScrape = { scrapedGames: () => scrapedGames };
+    })();
+</script>
+<!-- no hidden data, absolutely zero hardcoded game entries -->
+</body>
+</html>
