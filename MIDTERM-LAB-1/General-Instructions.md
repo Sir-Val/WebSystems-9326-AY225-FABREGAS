@@ -18,3 +18,5 @@ Developer Information
 Publisher Information
 
 If a field is unavailable on the website, indicate "Not Available" instead of leaving it blank.
+IMPORTANT:
+YOUR WEBSCRAPE CODE MUST NEVER HOLD ANY DATA OR HARDCODED DATA FROM THE TARGET WEBSITE IT WILL PERFORM WEBSCRAPING TO.
