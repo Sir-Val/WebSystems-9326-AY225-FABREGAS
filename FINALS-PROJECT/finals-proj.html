@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>WST 2-Week Sprint: Game & Web Portal | UPHSD Molino</title>
+  <title>Websystems and Technologies 2-Week Sprint: Game & Web Portal | UPHSD Molino</title>
   <link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet" />
 
   <style>
@@ -20,7 +20,7 @@
     * { box-sizing: border-box; margin: 0; padding: 0; }
     body { font-family: 'IBM Plex Sans', sans-serif; background: var(--bg); color: var(--text); line-height: 1.6; }
     
-    .container { max-width: 1000px; margin: 0 auto; background: var(--surface); border: 1px solid var(--border); }
+    .container { max-width: 1100px; margin: 0 auto; background: var(--surface); border: 1px solid var(--border); }
     
     header { background: var(--uph-violet); color: white; padding: 3rem 2rem; text-align: center; }
     header h1 { font-family: 'Syne', sans-serif; font-size: 2.2rem; margin-bottom: 0.5rem; }
@@ -34,10 +34,20 @@
 
     .callout { background: #fff9e6; border-left: 5px solid var(--uph-gold); padding: 1rem; margin: 1rem 0; font-size: 0.95rem; }
 
+    /* Genre List Styles */
     .genre-list { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-top: 1.5rem; }
-    .genre-card { background: #fff; padding: 15px; border: 1px solid #ddd; border-radius: 4px; }
-    .genre-card strong { color: var(--uph-violet); font-family: 'Syne', sans-serif; display: block; margin-bottom: 5px; font-size: 1.1rem; }
-    .genre-card p { font-size: 0.85rem; color: var(--text-muted); margin: 0; }
+    .genre-card { background: #fff; padding: 15px; border: 1px solid #ddd; border-radius: 4px; display: flex; flex-direction: column; }
+    .genre-card strong { color: var(--uph-violet); font-family: 'Syne', sans-serif; display: block; margin-bottom: 8px; font-size: 1.1rem; }
+    .genre-card p { font-size: 0.85rem; color: var(--text-muted); margin-bottom: 15px; flex-grow: 1; }
+    
+    .student-entry { 
+      border-top: 1px dashed #ccc; 
+      padding-top: 10px; 
+      font-family: 'IBM Plex Mono', monospace; 
+      font-size: 0.85rem; 
+      color: var(--uph-gold);
+      font-weight: 600;
+    }
 
     .timeline { list-style: none; padding: 0; }
     .day-item { margin-bottom: 1rem; padding-left: 1.5rem; border-left: 2px solid var(--uph-violet); position: relative; }
@@ -46,7 +56,7 @@
 
     footer { text-align: center; padding: 2rem; font-size: 0.75rem; color: #777; border-top: 1px solid var(--border); }
 
-    @media (max-width: 768px) {
+    @media (max-width: 850px) {
       .genre-list { grid-template-columns: 1fr; }
     }
   </style>
@@ -56,7 +66,7 @@
 <div class="container">
   <header>
     <p>UPHSD MOLINO — COLLEGE OF COMPUTER STUDIES</p>
-    <h1>WST Final Project: 2-Week Sprint</h1>
+    <h1>Web Systems and Technologies Final Project</h1>
     <p>Game Dev Web Portal & Original Mini-Game</p>
   </header>
 
@@ -64,10 +74,10 @@
     
     <section class="section">
       <h2>Project Overview</h2>
-      <p>This is a fast-tracked, 14-day development cycle for 2nd Year IT Game Development majors. Pairs will develop an <strong>original mini-game</strong> and host a professional <strong>GitHub Pages website</strong> to showcase their work. This project emphasizes clean UI, functional game loops, and collaborative version control.</p>
+      <p>This is a fast-tracked, 14-day development cycle for 2nd Year IT Game Development majors. Pairs will develop an <strong>original mini-game</strong> and a <strong>GitHub Pages website</strong>. This project focuses on functional game loops, effective collaboration, and professional web deployment.</p>
       
       <div class="callout">
-        <strong>The Goal:</strong> A functional 1-level game + A live 2-page website + Professional GitHub Repo.
+        <strong>Goal:</strong> 1-Level Game + 2-Page Website Portal + Professional GitHub Repo.
       </div>
     </section>
 
@@ -75,125 +85,149 @@
       <h2>Project Requirements</h2>
       <h3>1. The Website (GitHub Pages)</h3>
       <ul>
-        <li><strong>Game Landing Page:</strong> A professional front-end design featuring game titles, instructions, and "Play Now" or "Download" links.</li>
-        <li><strong>Development Blog/Team Page:</strong> A section documenting the team’s roles, the assigned genre, and links to both student GitHub profiles.</li>
-        <li><strong>Responsive Design:</strong> The website must be navigable on both desktop and mobile browsers.</li>
+        <li><strong>Game Landing Page:</strong> Professional design featuring the game title, gameplay instructions, and direct play/download links.</li>
+        <li><strong>Team Page:</strong> Documentation of individual roles and direct links to both student GitHub profiles.</li>
       </ul>
 
       <h3>2. The Game (Any Platform)</h3>
       <ul>
-        <li><strong>Complete Game Loop:</strong> Must include a Start/Menu Screen, the core Playable Mechanic, and a Game Over/Score Screen.</li>
-        <li><strong>Scope:</strong> Complexity should be simple and attainable within the two-week timeframe. Use of assets (sprites/audio) is allowed if properly credited.</li>
+        <li><strong>Complete Loop:</strong> Must include a Menu Screen, the core Playable Mechanic, and a final Score/Game Over screen.</li>
+        <li><strong>Scope:</strong> Complexity should be simple and attainable within the 14-day sprint using assets or original art.</li>
       </ul>
 
       <h3>3. GitHub Collaboration</h3>
       <ul>
-        <li><strong>Commit History:</strong> A shared repository with a minimum of <strong>5 commits per student</strong> showing active collaboration.</li>
+        <li><strong>Commit History:</strong> A shared repository with at least 5 meaningful commits per student to prove collaboration.</li>
         <li><strong>Documentation:</strong> A professional <code>README.md</code> featuring a project description, controls, and high-quality screenshots.</li>
       </ul>
     </section>
 
     <section class="section">
-      <h2>Revised Project Schedule (2-Week Sprint)</h2>
+      <h2>Project Schedule (2-Week Sprint)</h2>
       <div class="timeline">
-        <div class="day-item">
-          <span class="day-label">Day 1-2: Setup & Planning</span>
-          <p>Genre assignment. Repository creation. Initial wireframing of the website and game logic.</p>
-        </div>
-        <div class="day-item">
-          <span class="day-label">Day 3-7: Core Development</span>
-          <p>Develop core game mechanics (movement, scoring, win/loss conditions) and build basic HTML/CSS site structure.</p>
-        </div>
-        <div class="day-item">
-          <span class="day-label">Day 8-11: Integration</span>
-          <p>Embed the game into the website portal. Finalize UI/UX styling and ensure GitHub Pages deployment is live.</p>
-        </div>
-        <div class="day-item">
-          <span class="day-label">Day 12-13: Testing & Debugging</span>
-          <p>Final bug fixes, peer testing, and finalizing the README file.</p>
-        </div>
-        <div class="day-item">
-          <span class="day-label">Day 14: Final Defense</span>
-          <p>Live 5-minute demonstration of the website and gameplay walkthrough.</p>
-        </div>
+        <div class="day-item"><span class="day-label">Day 1-2:</span> Genre assignment, repository creation, and initial UI wireframing.</div>
+        <div class="day-item"><span class="day-label">Day 3-7:</span> Development of the core game loop and basic HTML/CSS site structure.</div>
+        <div class="day-item"><span class="day-label">Day 8-11:</span> Integration of the game into the web portal and UI/UX styling.</div>
+        <div class="day-item"><span class="day-label">Day 12-13:</span> Bug fixes, cross-browser testing, and README finalization.</div>
+        <div class="day-item"><span class="day-label">Day 14:</span> Final Defense and Technical Project Walkthrough.</div>
       </div>
     </section>
 
     <section class="section">
       <h2>Genre Assignment Pool</h2>
-      <p>The professor will assign one unique genre per group. Descriptions are provided to help guide your design:</p>
+      <p>The professor will assign one unique genre to each group. Detailed descriptions and student assignments are below:</p>
       
       <div class="genre-list">
         <div class="genre-card">
           <strong>1. Platformer</strong>
-          <p>Players navigate a character across suspended platforms and over obstacles using jumping mechanics. Success is measured by reaching the end of the level without falling or hitting hazards.</p>
+          <p>Navigate a character across suspended platforms and moving obstacles using precise jumping mechanics. Players must avoid falling into pits or touching hazards to reach the final goal marker. Success requires balancing physics-based movement with level design difficulty.</p>
+          <div class="student-entry">Assigned to: _________________________</div>
         </div>
         <div class="genre-card">
           <strong>2. Tower Defense</strong>
-          <p>Players must protect a base by strategically placing automated weapons along a path to stop waves of enemies. The game loop focuses on resource management and optimal tower placement.</p>
+          <p>Protect a central base by strategically placing automated defensive units along a predefined enemy path. Each defeated enemy provides currency to purchase or upgrade your towers against increasingly difficult waves. The game ends if a specific number of enemies successfully penetrate your defenses.</p>
+          <div class="student-entry">Assigned to: _________________________</div>
         </div>
         <div class="genre-card">
           <strong>3. Endless Runner</strong>
-          <p>The character moves forward automatically, and the player must dodge obstacles or collect items to survive as long as possible. The primary goal is to achieve the highest score before the inevitable crash.</p>
+          <p>The player character moves forward automatically at a steady pace while obstacles appear at random intervals. You must use jumping, sliding, or lane-switching to avoid collisions and stay alive as the game speed increases. High scores are calculated based on the total distance traveled before the first mistake.</p>
+          <div class="student-entry">Assigned to: _________________________</div>
         </div>
         <div class="genre-card">
           <strong>4. Puzzle Logic</strong>
-          <p>Players solve non-action challenges that require pattern recognition or logical deduction to progress. This genre emphasizes "Aha!" moments through clever level design rather than reflexes.</p>
+          <p>Solve specific challenges that require pattern recognition, sequence memorization, or logical deduction to progress. Unlike action games, the focus is on intellectual hurdles and "Aha!" moments triggered by clever environmental interactions. Success is determined by completing the puzzle within a limited number of moves or time.</p>
+          <div class="student-entry">Assigned to: _________________________</div>
         </div>
         <div class="genre-card">
           <strong>5. Top-Down Shooter</strong>
-          <p>Viewed from an aerial perspective, players control a character that moves and shoots in multiple directions to clear enemies. It requires responsive controls and basic enemy AI behaviors.</p>
+          <p>Control a character from an aerial perspective and use projectile weapons to clear waves of incoming enemies. Players must navigate through open environments while managing ammunition or cooldown timers to survive. The loop concludes once the boss is defeated or a specific kill count is reached.</p>
+          <div class="student-entry">Assigned to: _________________________</div>
         </div>
         <div class="genre-card">
           <strong>6. Clicker/Idle</strong>
-          <p>Gameplay revolves around clicking an object to gain currency, which is then spent on upgrades to automate the process. It is a math-heavy genre that focuses on progression curves and exponential growth.</p>
+          <p>Gameplay revolves around clicking a central object to generate a basic currency that can be spent on automated upgrades. These upgrades allow the system to generate currency even without player input, creating an exponential growth loop. The primary objective is to reach high-tier milestones through strategic resource management.</p>
+          <div class="student-entry">Assigned to: _________________________</div>
         </div>
         <div class="genre-card">
           <strong>7. Turn-Based Combat</strong>
-          <p>Players and enemies take turns selecting actions from a menu, such as attacking, defending, or using items. This allows for strategic decision-making without the pressure of real-time movement.</p>
+          <p>Combat is resolved through a tactical menu where players and AI take turns selecting specific actions like attacking or defending. Success depends on understanding elemental strengths, weaknesses, and the effective use of limited skill points. The game loop ends when either the player or the enemy party's health reaches zero.</p>
+          <div class="student-entry">Assigned to: _________________________</div>
         </div>
         <div class="genre-card">
           <strong>8. Rhythm Tap</strong>
-          <p>Players must perform inputs in synchronization with a musical beat or visual cues. Accuracy and timing are the core metrics for determining the player's performance level.</p>
+          <p>Players must time their inputs perfectly with musical beats or visual scrolling cues appearing on the screen. Performance is graded based on the accuracy of the tap, ranging from "Perfect" to "Miss," affecting the final score. The challenge increases as the tempo speeds up and the patterns become more complex.</p>
+          <div class="student-entry">Assigned to: _________________________</div>
         </div>
         <div class="genre-card">
           <strong>9. Stealth Escape</strong>
-          <p>Players must navigate through a level while avoiding the detection cones of guards or security cameras. The game ends if the player is spotted, forcing a focus on patience and timing.</p>
+          <p>Navigate through a high-security level by staying out of the visible detection cones of guards and cameras. Players must use environmental cover and timing to reach the exit without triggering a loud alarm. Being spotted immediately restarts the level, emphasizing patience and careful observation over speed.</p>
+          <div class="student-entry">Assigned to: _________________________</div>
         </div>
         <div class="genre-card">
           <strong>10. Match-3</strong>
-          <p>The objective is to swap adjacent tiles on a grid to create rows or columns of three identical items. Clearing tiles earns points and often triggers cascading effects for higher scores.</p>
+          <p>Players swap adjacent tiles on a grid to create a sequence of three or more identical items. Cleared tiles grant points and cause new tiles to fall into place, potentially creating massive chain reactions. The game ends when the player reaches a target score or runs out of available swaps.</p>
+          <div class="student-entry">Assigned to: _________________________</div>
         </div>
         <div class="genre-card">
           <strong>11. Racing/Time Trial</strong>
-          <p>Players control a vehicle or character trying to complete a course in the fastest time possible. Success depends on mastering cornering and maintaining top speed throughout the track.</p>
+          <p>Control a vehicle or character along a complex track with the goal of reaching the finish line as fast as possible. Players must master cornering and speed boosts while avoiding track-side obstacles that cause slowdowns. The core mechanic is the "Ghost" system or a leaderboard that tracks the best completion times.</p>
+          <div class="student-entry">Assigned to: _________________________</div>
         </div>
         <div class="genre-card">
           <strong>12. Visual Novel</strong>
-          <p>This is a narrative-driven genre where players progress through a story and make choices that lead to different endings. It relies heavily on text, character art, and simple branching logic.</p>
+          <p>Experience a narrative-driven story where progress is made by reading dialogue and viewing character illustrations. At critical moments, the player is presented with choices that branch the plot in different directions. The game concludes when the player reaches one of the several scripted endings based on their decisions.</p>
+          <div class="student-entry">Assigned to: _________________________</div>
         </div>
         <div class="genre-card">
           <strong>13. Bullet Hell</strong>
-          <p>A subgenre of shooters where the screen is filled with intricate patterns of enemy projectiles. Players must have high precision to navigate through tiny gaps in the "curtain" of fire.</p>
+          <p>A high-intensity shooter where the screen is filled with beautiful but deadly patterns of enemy projectiles. Players have a very small "hitbox" and must navigate through microscopic gaps in the fire while counter-attacking. Survival depends on extreme focus and high-precision movement controls.</p>
+          <div class="student-entry">Assigned to: _________________________</div>
         </div>
         <div class="genre-card">
           <strong>14. Tycoon/Manager</strong>
-          <p>Players act as an administrator of a business or system, making financial decisions to grow their empire. The game loop involves balancing income against operational costs and upgrades.</p>
+          <p>Act as an administrator of a system, such as a shop or a theme park, by balancing budgets and customer satisfaction. You must invest earned profits into better facilities to attract more revenue and expand your operations. The win condition is usually reaching a specific net worth or prestige level.</p>
+          <div class="student-entry">Assigned to: _________________________</div>
         </div>
         <div class="genre-card">
           <strong>15. Side-Scroll Brawler</strong>
-          <p>Players move from left to right, fighting off groups of enemies using melee combat. It emphasizes simple combo systems and "locking" the screen until all current enemies are defeated.</p>
+          <p>Move across a 2D plane and defeat groups of enemies using a combination of melee strikes and special moves. Players are often blocked from progressing until all enemies on the current screen have been cleared. This genre emphasizes "combat feel" and managing multiple attackers simultaneously.</p>
+          <div class="student-entry">Assigned to: _________________________</div>
         </div>
         <div class="genre-card">
           <strong>16. Card Battler</strong>
-          <p>Combat is resolved through the use of a deck of cards representing various abilities or creatures. Players must manage their hand and resources to outsmart the opponent's deck.</p>
+          <p>Conflict is resolved by playing cards from a deck that represent different creatures, spells, or defensive maneuvers. Players must manage a limited resource (like mana) to play cards strategically against an opponent’s hand. The match is won when the opponent’s life points are fully depleted.</p>
+          <div class="student-entry">Assigned to: _________________________</div>
         </div>
         <div class="genre-card">
           <strong>17. Memory Match</strong>
-          <p>Players flip over pairs of hidden tiles to find matching sets within a limited number of moves or time. It is a straightforward test of short-term memory and concentration.</p>
+          <p>Flip over two face-down tiles at a time to find identical pairs hidden within a grid. Players must remember the positions of previously revealed tiles to clear the entire board efficiently. The game tracks the number of attempts or time taken, rewarding those with high concentration.</p>
+          <div class="student-entry">Assigned to: _________________________</div>
         </div>
         <div class="genre-card">
           <strong>18. Physics Sandbox</strong>
-          <p>The game provides a set of objects and tools that interact based on realistic physics like gravity and momentum. Players are given a specific goal to reach using creative construction or destruction.</p>
+          <p>Use a variety of tools and objects that interact according to the laws of gravity, friction, and momentum. Players are given a goal, like knocking down a structure or getting an object to a specific spot, using creative engineering. There is often no single "correct" solution, encouraging experimentation with the physics engine.</p>
+          <div class="student-entry">Assigned to: _________________________</div>
         </div>
-        <div class="genre
+        <div class="genre-card">
+          <strong>19. Maze Crawler</strong>
+          <p>Navigate through a complex labyrinth where the primary challenge is finding the correct path to the exit. Players may encounter locked doors that require keys or one-way passages that prevent backtracking. The game emphasizes spatial awareness and exploration within a restricted environment.</p>
+          <div class="student-entry">Assigned to: _________________________</div>
+        </div>
+        <div class="genre-card">
+          <strong>20. Survival Defense</strong>
+          <p>The player controls a single unit that must withstand constant attacks from waves of enemies for a specific duration. You must collect experience or power-ups dropped by enemies to strengthen your character in real-time. Survival is the only win condition, requiring constant movement and optimal ability selection.</p>
+          <div class="student-entry">Assigned to: _________________________</div>
+        </div>
+      </div>
+    </section>
+
+  </div>
+
+  <footer>
+    &copy; 2026 University of Perpetual Help System DALTA — Molino Campus<br>
+    College of Computer Studies | Web Systems and Technologies
+  </footer>
+</div>
+
+</body>
+</html>
